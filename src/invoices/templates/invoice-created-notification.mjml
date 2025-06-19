@@ -1,0 +1,297 @@
+<mjml>
+  <mj-head>
+    <mj-font name="Poppins" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+    <mj-attributes>
+      <mj-all font-family="Poppins, Helvetica, Arial, sans-serif" />
+      <mj-button border-radius="8px" padding="12px 24px" font-weight="600" font-size="16px" />
+      <mj-text line-height="1.6" />
+    </mj-attributes>
+    <mj-style>
+      .status-confirmed {
+        background:rgba(172, 252, 211, 0.29);
+        border-left: 4px solidrgb(46, 160, 247);
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .info-card {
+        background: #eff6ff;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .transaction-card {
+        background: #eff6ff;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .period-card {
+        background: #eff6ff;
+        border: 1px solid #3b82f6;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+      .service-highlight {
+        background: linear-gradient(to right, #eff6ff, #eff6ff);
+        border-radius: 16px;
+        padding: 24px;
+      }
+      .notes-card {
+        background: #eff6ff;
+        border: 1px solidrgb(173, 210, 249);
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .portal-card {
+        background: #eff6ff;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .steps-card {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .support-card {
+        background: linear-gradient(to right, #f9fafb, #f9fafb);
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .code-inline {
+        background: #dbeafe;
+        color: #3b82f6;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+      }
+      .period-summary-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        padding: 12px;
+        margin-bottom: 24px;
+      }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#f6f9fc">
+
+    <!-- Header with Logo and Social -->
+    <mj-section background-color="#ffffff" padding="20px 0">
+      <mj-column width="50%">
+        <mj-image 
+          width="36px" 
+          src="https://res.cloudinary.com/dente/image/upload/v1634436472/imagesStatic/Logo_Dente_Colores_cvutxk.png" 
+          
+          align="left" 
+        />
+      </mj-column>
+      <mj-group>
+        <mj-column width="50%">
+          <mj-image 
+            width="36px" 
+            src="https://react.email/static/instagram-logo.png" 
+            align="right"
+            href="https://www.instagram.com/denteapp/"
+          />
+        </mj-column>
+        <mj-column width="50%">
+          <mj-image 
+            width="36px" 
+            src="https://react.email/static/facebook-logo.png" 
+            align="right"
+            href="https://facebook.com/denteapp/"
+          />
+        </mj-column>
+      </mj-group>
+    </mj-section>
+
+    <!-- Hero Image -->
+    <mj-section background-color="#ffffff" padding="0 25px">
+      <mj-column>
+        <mj-image 
+          width="600px" 
+          src="https://res.cloudinary.com/dente/image/upload/v1750137679/edkrchzazi8zl3jzbc7l.png" 
+          alt="Software Dental dente"
+          border-radius="12px"
+        />
+      </mj-column>
+    </mj-section>
+
+    <!-- Hero Section -->
+    <mj-section background-color="#ffffff" padding="32px 25px">
+      <mj-column>
+        <mj-text align="center" font-size="28px" font-weight="600" color="#1a202c">
+          ¡Tu factura ya está disponible!
+        </mj-text>
+        <mj-text align="center" font-size="16px" color="#6b7280">
+          Hola <strong>{{clinic.adminNames[0]}}</strong>, te notificamos que ya se encuentra disponible la factura correspondiente al próximo periodo de servicio de <strong>{{clinic.medicalClinicName}}</strong>.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Confirmation Alert -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-table css-class="status-confirmed">
+          <tr>
+            <td style="text-align: center;">
+              <div style="font-size: 15px; color:rgba(6, 95, 70);">
+                La factura correspondiente al próximo periodo de servicio ha sido generada correctamente y ya se encuentra disponible para su revisión y pago
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Customer Info -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          Información de la clínica
+        </mj-text>
+        <mj-table css-class="info-card">
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Usuario:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{clinic.adminNames[0]}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Clínica:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{clinic.medicalClinicName}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Divider -->
+    <mj-section background-color="#ffffff" padding="0 25px">
+      <mj-column>
+        <mj-divider border-width="2px" border-color="#e5e7eb" />
+      </mj-column>
+    </mj-section>
+
+    <!-- Invoice Details -->
+    <mj-section background-color="#ffffff" padding="24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          Detalles de la factura
+        </mj-text>
+        <mj-table css-class="transaction-card">
+          <tr style="border-bottom: 1px solid #bfdbfe;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Periodo:</td>
+            <td style="padding: 12px 0; color: #3b82f6;">{{invoice.period}}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #bfdbfe;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Fecha de Emisión:</td>
+            <td style="padding: 12px 0; color: #3b82f6;">{{invoice.issuedDate}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Importe Total:</td>
+            <td style="padding: 12px 0; color: #3b82f6; font-weight: 700;">{{invoice.amount}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+ 
+   
+
+    <!-- Important Notes -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-table css-class="notes-card">
+          <tr>
+            <td>
+              <div style="font-size: 16px; font-weight: 600; color:rgb(21, 130, 220); margin-bottom: 12px;">
+  📋 Información importante sobre tu factura:
+</div>
+<ul style="font-size: 14px; color:rgb(7, 86, 161); margin: 0; padding-left: 16px;">
+   <li style="margin-bottom: 8px;">Tu factura ya se encuentra disponible y debe ser pagada antes de la fecha de vencimiento para evitar interrupciones en el servicio.</li>
+  <li style="margin-bottom: 8px;">Puedes revisarla y descargarla directamente desde el portal de Pago Seguro.</li>
+  <li style="margin-bottom: 8px;">Una vez confirmado el pago, recibirás una notificación automática y podrás descargar tu comprobante desde el Pago Seguro.</li>
+  <li style="margin-bottom: 8px;">Si tienes dudas sobre los métodos de pago o necesitas asistencia, contáctanos.</li>
+  <li>El incumplimiento en el pago podrá resultar en la suspensión temporal del acceso a la plataforma.</li>
+</ul>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Portal Access -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          Acceso a tu Factura
+        </mj-text>
+        <mj-table css-class="portal-card">
+          <tr>
+            <td style="text-align: center;">
+              <a href="https://portal.denteapp.com/auth/login" target="_blank">
+                <img src="https://portal.denteapp.com/email/login.png" alt="Portal de Pago Seguro dente" style="width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 16px;" />
+              </a>
+              <div style="font-size: 16px; font-weight: 500; color: #374151; margin-bottom: 16px;">
+                Puedes acceder al portal de pagos para:
+              </div>
+              <ul style="font-size: 14px; color: #6b7280; text-align: left; max-width: 300px; margin: 0 auto 16px auto; padding-left: 20px;">
+                <li style="margin-bottom: 8px;">Descargar tu factura en PDF</li>
+                <li style="margin-bottom: 8px;">Realizar el pago en línea por medio de tarjeta de crédito o transferencia</li>
+                <li>Consultar tu historial de facturas</li>
+              </ul>
+             <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+  <tr>
+    <td align="center" bgcolor="#021430" style="border-radius: 4px;">
+      <a href="https://portal.denteapp.com/auth/login" style="color:rgb(243, 248, 255); padding: 12px 24px; display: inline-block; text-decoration: none; font-weight: bold;">Acceder al Portal de Pago Seguro</a>
+    </td>
+  </tr>
+</table>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" padding="32px 25px 20px 25px">
+      <mj-column width="50%">
+        <mj-image 
+          width="32px" 
+          src="https://res.cloudinary.com/dente/image/upload/v1634436472/imagesStatic/Logo_Dente_Colores_cvutxk.png" 
+          alt="Dente Logo" 
+          align="left" 
+        />
+      </mj-column>
+      <mj-column width="50%">
+        <mj-image 
+          width="32px" 
+          src="https://res.cloudinary.com/dente/image/upload/v1724905445/imagesStatic/q3nurduhkgqulb80anla.png" 
+          alt="Astro" 
+          align="right" 
+        />
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer Text -->
+    <mj-section background-color="#ffffff" padding="20px 25px">
+      <mj-column>
+        <mj-text align="center" font-size="14px" color="#6b7280">
+          © 2025 dente - Software odontológico
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af">
+          Sitios web: 
+          <a href="https://denteapp.com" target="_blank" style="color: #3b82f6;">denteapp.com</a> | 
+          <a href="https://astrotech.dev" target="_blank" style="color: #3b82f6;">astrotech.dev</a>
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af">
+          Contacto: Si tiene alguna pregunta sobre su factura, no dude en ponerse en contacto con nuestro equipo de soporte a través de email o por WhatsApp al (+504) 8893-0220.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af">
+          Derechos reservados: © dente. Todos los derechos reservados. dente es un producto de Astro Technologies S.A. de C.V.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+

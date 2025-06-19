@@ -1,0 +1,83 @@
+<mjml>
+  <mj-head>
+    <!-- Cargar fuente Poppins desde Google Fonts -->
+    <mj-font name="Poppins" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" />
+    <mj-attributes>
+      <mj-all font-family="Poppins, Helvetica, Arial, sans-serif" />
+      <mj-button border-radius="5px" padding="10px 25px" font-weight="600" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#f0f0f0">
+    <!-- LOGO -->
+    <mj-section background-color="#ffffff" padding-bottom="0">
+      <mj-column>
+        <mj-image width="100px" src="{{avatar}}" alt="Logo Clínica Dental" align="center" />
+      </mj-column>
+    </mj-section>
+
+    <!-- TÍTULO -->
+    <mj-section background-color="#ffffff" padding-top="0" padding-bottom="10px">
+      <mj-column>
+        <mj-text align="center" font-size="22px" font-weight="bold" color="#333333">
+          Recordatorio de cita médica
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- INFO PACIENTE Y CITA -->
+    <mj-section background-color="#ffffff">
+      <mj-column>
+        <mj-text font-size="16px" color="#555555">
+          Hola <strong>{{name}}</strong>,
+        </mj-text>
+        <mj-text font-size="16px" color="#555555">
+          Este es un recordatorio de tu cita programada para:
+        </mj-text>
+        <mj-text font-size="18px" font-weight="bold" color="#000000">
+          📅 {{date}}
+        </mj-text>
+        <mj-text font-size="16px" color="#555555">
+          Por favor, asegúrate de estar presente a tiempo. Si necesitas reprogramar, contáctanos.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <mj-section background-color="#ffffff" padding="10px 25px">
+      <mj-column>
+        <mj-button href="{{confirmUrl}}" background-color="#28a745" color="#ffffff">
+          Confirmar Cita
+        </mj-button>
+        <mj-button href="{{rescheduleUrl}}" background-color="#ffc107" color="#000000">
+          Reprogramar
+        </mj-button>
+        <mj-button href="{{cancelUrl}}" background-color="#dc3545" color="#ffffff">
+          Cancelar Cita
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- INFO CLÍNICA -->
+    <mj-section background-color="#ffffff" padding-top="0">
+      <mj-column>
+        <mj-divider border-color="#dddddd" />
+        <mj-text font-size="14px" color="#999999">
+          <strong>{{clinicName}}</strong><br />
+          {{clinicAddress}}<br />
+          Teléfono: {{clinicPhone}}<br />
+          Email: {{clinicEmail}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- PIE DE PÁGINA -->
+    <mj-section background-color="#ffffff" padding-top="0">
+      <mj-column>
+        <mj-text font-size="14px" color="#999999">
+          Gracias,<br />Equipo Dente
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

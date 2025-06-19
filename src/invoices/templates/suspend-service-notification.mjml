@@ -1,0 +1,355 @@
+<mjml>
+  <mj-head>
+    <mj-title>Suspensión Temporal de Servicio - dente</mj-title>
+    <mj-font name="Poppins" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+    <mj-attributes>
+      <mj-all font-family="Poppins, Helvetica, Arial, sans-serif" />
+      <mj-button border-radius="8px" padding="12px 24px" font-weight="600" font-size="16px" />
+      <mj-text line-height="1.6" />
+    </mj-attributes>
+    <mj-style>
+      .gray-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .dark-gray-card {
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .suspension-alert {
+        background: #fef2f2;
+        border-left: 4px solid #dc2626;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .info-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .transaction-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .notes-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .portal-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .support-card {
+        background: linear-gradient(to right, #f9fafb, #f9fafb);
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .code-inline {
+        background: #e2e8f0;
+        color: #475569;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+      }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#f6f9fc">
+
+    <!-- Header with Logo and Social -->
+    <mj-section background-color="#ffffff" padding="20px 0">
+      <mj-column width="50%">
+        <mj-image 
+          width="36px" 
+          src="{{logoUrl}}" 
+          alt="{{companyName}}" 
+          align="left" 
+        />
+      </mj-column>
+      <mj-group>
+        <mj-column width="50%">
+          <mj-image 
+            width="36px" 
+            src="https://react.email/static/instagram-logo.png" 
+            
+            align="right"
+            href="https://www.instagram.com/denteapp/"
+          />
+        </mj-column>
+        <mj-column width="50%">
+          <mj-image 
+            width="36px" 
+            src="https://react.email/static/facebook-logo.png" 
+            
+            align="right"
+            href="https://facebook.com/denteapp/"
+          />
+        </mj-column>
+      </mj-group>
+    </mj-section>
+
+    <!-- Hero Image -->
+    <mj-section background-color="#ffffff" padding="0 25px">
+      <mj-column>
+        <mj-image 
+          width="600px" 
+          src="https://res.cloudinary.com/dente/image/upload/v1750265845/gbbx2g7twzxnlgoaxhxl.jpg" 
+          alt="Software Dental dente"
+          border-radius="12px"
+        />
+      </mj-column>
+    </mj-section>
+
+    <!-- Hero Section -->
+    <mj-section background-color="#ffffff" padding="32px 25px">
+      <mj-column>
+        <mj-text align="center" font-size="28px" font-weight="600" color="#1a202c">
+          Servicio temporalmente suspendido  😞
+        </mj-text>
+        <mj-text align="center" font-size="16px" color="#6b7280">
+          Hola <strong>{{adminName}}</strong>, con pesar te notificamos que hemos tenido que suspender temporalmente el acceso al servicio de <strong>{{clinicName}}</strong> debido a facturas pendientes de pago. Entendemos que esta situación puede ser inconveniente y estamos aquí para ayudarte a resolverla rápidamente.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Suspension Alert -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-table css-class="suspension-alert">
+          <tr>
+            <td style="text-align: center;">
+              <div style="font-size: 15px; color: #7f1d1d;">
+                Tu clínica tiene <strong style="color: #dc2626;">{{unpaidCount}} factura(s) pendiente(s)</strong> con 1 pago vencido desde hace <strong style="color: #dc2626;">{{daysOverdue}} días</strong>.
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Customer Info -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          Información de la clínica
+        </mj-text>
+        <mj-table css-class="info-card">
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Usuario:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{adminName}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Clínica:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{clinicName}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Plan:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{clinic.clinicDetails.plan}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Usuarios Licenciados:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{clinic.clinicDetails.licenceUser}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">País:</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{clinic.clinicDetails.country}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Divider -->
+    <mj-section background-color="#ffffff" padding="0 25px">
+      <mj-column>
+        <mj-divider border-width="2px" border-color="#e5e7eb" />
+      </mj-column>
+    </mj-section>
+
+    <!-- Invoice Details -->
+    <mj-section background-color="#ffffff" padding="24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          Detalles de las facturas pendientes
+        </mj-text>
+        
+        <mj-text font-size="18px" font-weight="600" color="#374151" padding="16px 0 8px 0">
+          Primera Factura:
+        </mj-text>
+        <mj-table css-class="transaction-card">
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Periodo</td>
+            <td style="padding: 12px 0; color: #475569;">{{firstInvoiceInfo.period}}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Fecha de emisión </td>
+            <td style="padding: 12px 0; color: #475569;">{{firstInvoiceInfo.createdAtLong}}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Monto</td>
+            <td style="padding: 12px 0; color: #475569;">{{firstInvoiceInfo.amount}}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Estado</td>
+            <td style="padding: 12px 0; color:rgb(25, 104, 200); font-weight: 500;">Generado</td>
+          </tr>
+          
+          
+        </mj-table>
+
+        <mj-text font-size="18px" font-weight="600" color="#374151" padding="16px 0 8px 0">
+          Segunda Factura:
+        </mj-text>
+        <mj-table css-class="transaction-card">
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Periodo</td>
+            <td style="padding: 12px 0; color: #475569;">{{secondInvoiceInfo.period}}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Fecha de emisión</td>
+            <td style="padding: 12px 0; color: #475569;">{{secondInvoiceInfo.createdAtLong}}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Monto</td>
+            <td style="padding: 12px 0; color: #475569;">{{secondInvoiceInfo.amount}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Estado</td>
+            <td style="padding: 12px 0; color: #dc2626; font-weight: 600; font-weight: 500;">Vencida</td>
+          </tr>
+          
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Important Notes -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-table css-class="notes-card">
+          <tr>
+            <td>
+              <div style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 12px;">
+                📋 Información importante sobre la suspensión:
+              </div>
+              <ul style="font-size: 14px; color: #6b7280; margin: 0; padding-left: 16px;">
+                <li>Para reactivar tu servicio, necesitás ponerte al día con las facturas, ya que el pago se realiza antes del uso del servicio.</li>
+                <li style="margin-bottom: 8px;">No podrás acceder a la plataforma dente mientras el servicio esté suspendido</li>
+                <li style="margin-bottom: 8px;">Tus datos permanecen seguros, pero no podrás consultarlos temporalmente</li>
+                <li style="margin-bottom: 8px;">Las citas programadas podrían verse afectadas</li>
+                <li style="margin-bottom: 8px;">Una vez realizado el pago, tu servicio se reactivará automáticamente en 24-48 horas</li>
+              </ul>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Portal Access -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          Reactivar tu servicio
+        </mj-text>
+        <mj-table css-class="portal-card">
+          <tr>
+            <td style="text-align: center;">
+              <a href="{{paymentUrl}}" target="_blank">
+                <img src="https://portal.denteapp.com/email/login.png" alt="Portal de Pago Seguro dente" style="width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 16px;" />
+              </a>
+              <div style="font-size: 16px; font-weight: 500; color: #374151; margin-bottom: 16px;">
+                Accede al portal de pagos para:
+              </div>
+              <ul style="font-size: 14px; color: #6b7280; text-align: left; max-width: 300px; margin: 0 auto 16px auto; padding-left: 20px;">
+                <li style="margin-bottom: 8px;">Ver todas las facturas pendientes</li>
+                <li style="margin-bottom: 8px;">Realizar el pago inmediato por tarjeta o transferencia</li>
+                <li>Descargar comprobantes de pago</li>
+              </ul>
+              <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td align="center" bgcolor="#374151" style="border-radius: 8px;">
+                    <a href="{{paymentUrl}}" style="color: #ffffff; padding: 12px 24px; display: inline-block; text-decoration: none; font-weight: bold;">PAGAR AHORA Y REACTIVAR</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Contact Information -->
+    <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="600" color="#111827">
+          ¿Necesitas ayuda?
+        </mj-text>
+        <mj-table css-class="support-card">
+          <tr>
+            <td style="text-align: center;">
+              <div style="font-size: 16px; color: #374151; margin-bottom: 16px;">
+                Nuestro equipo está disponible para ayudarte a reactivar tu servicio
+              </div>
+              <div style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
+                <strong>Contacto Administrativo:</strong><br/>
+                Nombre(s): {{adminNames}}<br/>
+                Email(s): {{adminEmails}}<br/>
+                ID de Clínica: <span class="code-inline">{{clinicId}}</span>
+              </div>
+              <div style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
+                📧 Email de Soporte: <strong><a href="mailto:{{supportEmail}}" style="color: #374151;">{{supportEmail}}</a></strong>
+              </div>
+              <div style="font-size: 14px; color: #6b7280;">
+                🔗 Centro de Ayuda: <strong><a href="{{supportUrl}}" style="color: #374151;">{{supportUrl}}</a></strong>
+              </div>
+            </td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer Logos -->
+    <mj-section background-color="#ffffff" padding="32px 25px 20px 25px">
+      <mj-column width="50%">
+        <mj-image 
+          width="32px" 
+          src="{{logoUrl}}" 
+          alt="{{companyName}} Logo" 
+          align="left" 
+        />
+      </mj-column>
+      <mj-column width="50%">
+        <mj-image 
+          width="32px" 
+          src="https://res.cloudinary.com/dente/image/upload/v1724905445/imagesStatic/q3nurduhkgqulb80anla.png" 
+          alt="Astro" 
+          align="right" 
+        />
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer Text -->
+    <mj-section background-color="#ffffff" padding="20px 25px">
+      <mj-column>
+        <mj-text align="center" font-size="14px" color="#6b7280">
+          © {{currentYear}} {{companyName}} - Software odontológico
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af">
+          Sitio web: 
+          <a href="https://{{websiteUrl}}" target="_blank" style="color: #6b7280;">{{websiteUrl}}</a>
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af">
+          Contacto urgente: Para reactivar tu servicio, contáctanos por email a {{supportEmail}} o teléfono {{supportPhone}}.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af">
+          Agradecemos tu comprensión y confianza en nuestros servicios. Estamos comprometidos en ayudarte a resolver esta situación rápidamente.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
