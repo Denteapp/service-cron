@@ -142,19 +142,19 @@
         </mj-text>
         <mj-table css-class="info-card">
           <tr>
-            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Usuario:</td>
-            <td style="padding: 8px 0; color: #1f2937;">{{adminName}}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Clínica:</td>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Clínica</td>
             <td style="padding: 8px 0; color: #1f2937;">{{clinicName}}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Plan:</td>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Usuario</td>
+            <td style="padding: 8px 0; color: #1f2937;">{{adminName}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Plan</td>
             <td style="padding: 8px 0; color: #1f2937;">{{clinic.clinicDetails.plan}}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Usuarios Licenciados:</td>
+            <td style="padding: 8px 16px 8px 0; font-weight: 500; color: #6b7280;">Licencias adicionales</td>
             <td style="padding: 8px 0; color: #1f2937;">{{clinic.clinicDetails.licenceUser}}</td>
           </tr>
           <tr>
@@ -180,7 +180,7 @@
         </mj-text>
         
         <mj-text font-size="18px" font-weight="600" color="#374151" padding="16px 0 8px 0">
-          Primera Factura:
+          Factura Vencida
         </mj-text>
         <mj-table css-class="transaction-card">
           <tr style="border-bottom: 1px solid #cbd5e1;">
@@ -197,14 +197,14 @@
           </tr>
           <tr style="border-bottom: 1px solid #cbd5e1;">
             <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Estado</td>
-            <td style="padding: 12px 0; color:rgb(25, 104, 200); font-weight: 500;">Generado</td>
+            <td style="padding: 12px 0; color: #dc2626; font-weight: 600; font-weight: 500;">Vencida</td>
           </tr>
           
           
         </mj-table>
 
         <mj-text font-size="18px" font-weight="600" color="#374151" padding="16px 0 8px 0">
-          Segunda Factura:
+          Factura Pendiente de Pago
         </mj-text>
         <mj-table css-class="transaction-card">
           <tr style="border-bottom: 1px solid #cbd5e1;">
@@ -221,7 +221,7 @@
           </tr>
           <tr>
             <td style="padding: 12px 16px 12px 0; font-weight: 500; color: #1f2937;">Estado</td>
-            <td style="padding: 12px 0; color: #dc2626; font-weight: 600; font-weight: 500;">Vencida</td>
+            <td style="padding: 12px 0; color:rgb(25, 104, 200); font-weight: 500;">Generado</td>
           </tr>
           
         </mj-table>
@@ -240,9 +240,9 @@
               <ul style="font-size: 14px; color: #6b7280; margin: 0; padding-left: 16px;">
                 <li>Para reactivar tu servicio, necesitás ponerte al día con las facturas, ya que el pago se realiza antes del uso del servicio.</li>
                 <li style="margin-bottom: 8px;">No podrás acceder a la plataforma dente mientras el servicio esté suspendido</li>
-                <li style="margin-bottom: 8px;">Tus datos permanecen seguros, pero no podrás consultarlos temporalmente</li>
+                <li style="margin-bottom: 8px;">Tus datos permanecen seguros, pero de momento no podrás consultarlos temporalmente</li>
                 <li style="margin-bottom: 8px;">Las citas programadas podrían verse afectadas</li>
-                <li style="margin-bottom: 8px;">Una vez realizado el pago, tu servicio se reactivará automáticamente en 24-48 horas</li>
+                <li style="margin-bottom: 8px;">Una vez realizado el pago, tu servicio se reactivará automáticamente en 4-8 horas</li>
               </ul>
             </td>
           </tr>
@@ -270,13 +270,19 @@
                 <li style="margin-bottom: 8px;">Realizar el pago inmediato por tarjeta o transferencia</li>
                 <li>Descargar comprobantes de pago</li>
               </ul>
-              <table border="0" cellpadding="0" cellspacing="0" role="presentation">
-                <tr>
-                  <td align="center" bgcolor="#374151" style="border-radius: 8px;">
-                    <a href="{{paymentUrl}}" style="color: #ffffff; padding: 12px 24px; display: inline-block; text-decoration: none; font-weight: bold;">PAGAR AHORA Y REACTIVAR</a>
-                  </td>
-                </tr>
-              </table>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
+  <tr>
+    <td align="center" style="padding: 0;">
+      <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td align="center" bgcolor="#374151" style="border-radius: 8px;">
+            <a href="{{paymentUrl}}" style="color: #ffffff; padding: 12px 24px; display: inline-block; text-decoration: none; font-weight: bold;">PAGAR AHORA Y REACTIVAR</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
             </td>
           </tr>
         </mj-table>
@@ -295,17 +301,20 @@
               <div style="font-size: 16px; color: #374151; margin-bottom: 16px;">
                 Nuestro equipo está disponible para ayudarte a reactivar tu servicio
               </div>
-              <div style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
-                <strong>Contacto Administrativo:</strong><br/>
-                Nombre(s): {{adminNames}}<br/>
-                Email(s): {{adminEmails}}<br/>
-                ID de Clínica: <span class="code-inline">{{clinicId}}</span>
-              </div>
+            
               <div style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
                 📧 Email de Soporte: <strong><a href="mailto:{{supportEmail}}" style="color: #374151;">{{supportEmail}}</a></strong>
               </div>
+              <div style="font-size: 14px; color: #6b7280; margin-bottom: 12px;">
+              <strong>
+  <a href="https://wa.me/{{supportPhone}}?text=Necesito%20ayuda%20con%20la%20reactivación%20de%20mi%20cuenta%20%F0%9F%92%B3" 
+     style="color: #374151; text-decoration: none;">
+    📧 WhatsApp: {{supportPhone}}
+  </a>
+</strong>
+              </div>
               <div style="font-size: 14px; color: #6b7280;">
-                🔗 Centro de Ayuda: <strong><a href="{{supportUrl}}" style="color: #374151;">{{supportUrl}}</a></strong>
+                <strong><a href="{{supportUrl}}" style="color: #374151;">{{supportUrl}}</a></strong>
               </div>
             </td>
           </tr>

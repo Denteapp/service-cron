@@ -48,7 +48,7 @@ type SuspensionTemplateData = {
 };
 
 export function renderSuspensionEmailMJML(data: SuspensionTemplateData | SuspensionData): string {
-  console.log('Rendering suspension email with data:', data);
+  // console.log('Rendering suspension email with data:', data);
   
   // Verificar si los datos vienen directamente o envueltos en 'suspension'
   // Corregir la lógica de extracción
@@ -64,10 +64,10 @@ export function renderSuspensionEmailMJML(data: SuspensionTemplateData | Suspens
     suspension = data;
     templateData = {
       suspension: data,
-      paymentUrl: 'https://portal.denteapp.com/payment',
-      supportUrl: 'https://denteapp.com/support',
+      paymentUrl: 'https://portal.denteapp.com/auth/login',
+      supportUrl: 'https://denteapp.com/',
       logoUrl: 'https://res.cloudinary.com/dente/image/upload/v1634436472/imagesStatic/Logo_Dente_Colores_cvutxk.png',
-      companyName: 'Dente',
+      companyName: 'dente',
       supportEmail: 'soporte@denteapp.com',
       supportPhone: '+504 8893-0220',
       websiteUrl: 'denteapp.com',
@@ -78,7 +78,7 @@ export function renderSuspensionEmailMJML(data: SuspensionTemplateData | Suspens
     throw new Error('Los datos de suspensión son inválidos o están incompletos');
   }
   
-  console.log('Suspension data extracted:', suspension);
+  // console.log('Suspension data extracted:', suspension);
   
   // Ruta al template MJML de suspensión
   const filePath = path.join(process.cwd(), 'src', 'invoices', 'templates', 'suspend-service-notification.mjml');
@@ -180,10 +180,10 @@ function formatCurrency(amount: number, locale = 'es-HN', currency = 'HNL'): str
 }
   // URLs y configuraciones por defecto
   const defaultUrls = {
-    paymentUrl: templateData.paymentUrl || 'https://portal.denteapp.com/payment',
-    supportUrl: templateData.supportUrl || 'https://denteapp.com/support',
+    paymentUrl: templateData.paymentUrl || 'https://portal.denteapp.com/auth/login',
+    supportUrl: templateData.supportUrl || 'https://denteapp.com/',
     logoUrl: templateData.logoUrl || 'https://res.cloudinary.com/dente/image/upload/v1634436472/imagesStatic/Logo_Dente_Colores_cvutxk.png',
-    companyName: templateData.companyName || 'Dente',
+    companyName: templateData.companyName || 'dente',
     supportEmail: templateData.supportEmail || 'soporte@denteapp.com',
     supportPhone: templateData.supportPhone || '+504 8893-0220',
     websiteUrl: templateData.websiteUrl || 'denteapp.com',
@@ -281,7 +281,7 @@ function formatCurrency(amount: number, locale = 'es-HN', currency = 'HNL'): str
     adminNames: suspension.adminNames?.join(', ') || 'No especificado',
   };
 
-  console.log('Replacement values:', replacementValues);
+  // console.log('Replacement values:', replacementValues);
 
   // Aplicar todas las sustituciones
   let filledTemplate = mjmlTemplate;
@@ -332,10 +332,10 @@ function formatCurrency(amount: number, locale = 'es-HN', currency = 'HNL'): str
 export function createSuspensionEmailData(suspensionData: SuspensionData): SuspensionTemplateData {
   return {
     suspension: suspensionData,
-    paymentUrl: 'https://portal.denteapp.com/payment',
-    supportUrl: 'https://denteapp.com/support',
+    paymentUrl: 'https://portal.denteapp.com/auth/login',
+    supportUrl: 'https://denteapp.com/',
     logoUrl: 'https://res.cloudinary.com/dente/image/upload/v1634436472/imagesStatic/Logo_Dente_Colores_cvutxk.png',
-    companyName: 'Dente',
+    companyName: 'dente',
     supportEmail: 'soporte@denteapp.com',
     supportPhone: '+504 8893-0220',
     websiteUrl: 'denteapp.com',

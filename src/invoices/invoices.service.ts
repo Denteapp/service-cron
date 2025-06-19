@@ -5,8 +5,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { addDays, addMonths, differenceInDays, format, subDays, subMonths } from 'date-fns';
 import { MedicalClinic, MedicalClinicDocument, MedicalClinicWithAdmin } from '../schema/medicalClinic.schema';
 import { canGenerateInvoiceCode, Payment, PaymentDocument, PaymentState } from '../schema/payment.schema';
-import { NotificationService } from '../notification/notification.service';
+import { NotificationService, SuspensionData } from '../notification/notification.service';
 import { InvoiceValidationDto, InvoiceGenerationResultDto } from '../dto/invoice-validator.dto';
+
+ 
 
 @Injectable()
 export class InvoicesService {
@@ -107,8 +109,6 @@ export class InvoicesService {
 
     // Contar facturas impagadas para una clínica
     async countUnpaidInvoices(clinicId: string): Promise<number> {
-
-        // this.logger.debug(`Contando facturas impagadas para clínica: ${clinicId}`);
 
         return this.paymentModel.countDocuments({
             medicalClinic: new Types.ObjectId(clinicId),
@@ -516,7 +516,6 @@ export class InvoicesService {
 
     // Cron job de desarrollo - cada 10 segundos (comentar en producción)
     // @Cron('*/30 * * * * *')
-    @Cron('*/30 * * * * *')
 
     async processBillingCronDev(): Promise<void> {
         this.logger.debug('🧪 [DESARROLLO] Ejecutando cron job de prueba...');
@@ -703,189 +702,508 @@ export class InvoicesService {
     //         this.logger.error('💥 Error verificando facturas vencidas:', error);
     //     }
     // }
+    // @Cron('*/30 * * * * *')
 
-    async checkOverdueInvoices(): Promise<void> {
-        this.logger.log('🔍 Iniciando evaluación de facturas impagas...');
+    
 
-        const gracePeriodDays = 3; // Días de gracia después de la segunda factura
-        const overdueDate = subDays(new Date(), gracePeriodDays); //TODO: Revisar si este valor debe de ser 5 dias mas, ya que se debe de validar 5 dias despues de la segunda factura
-        // console.log(overdueDate, 'overdueDate'); // 31 
+    // async checkOverdueInvoices(): Promise<void> {
+    //     this.logger.log('🔍 Iniciando evaluación de facturas impagas...');
 
-        try {
-            // Consulta única que obtiene clínicas con facturas impagas, información de la clínica y usuarios admin
-            const clinicsWithUnpaidAndUsers = await this.paymentModel.aggregate([
-                {
-                    $match: {
-                        paymentState: 4,
-                    }
-                },
-                {
-                    $sort: { createdAt: 1 } // Orden cronológico
-                },
-                {
-                    $group: {
-                        _id: '$medicalClinic',
-                        unpaidInvoices: { $push: '$$ROOT' },
-                        count: { $sum: 1 }
-                    }
-                },
-                {
-                    $match: {
-                        count: { $gte: 2 }
-                    }
-                },
-                {
-                    // Lookup para obtener información de la clínica
-                    $lookup: {
-                        from: 'medicalclinics', // ajusta el nombre de la colección
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'clinicInfo'
-                    }
-                },
-                {
-                    $unwind: '$clinicInfo'
-                },
-                {
-                    // Filtrar solo clínicas activas
-                    $match: {
-                        'clinicInfo.isActive': true
-                    }
-                },
-                {
-                    // Lookup para obtener usuarios admin
-                    $lookup: {
-                        from: 'users',
-                        let: { clinicId: '$_id' },
-                        pipeline: [
-                            {
-                                $match: {
-                                    $expr: {
-                                        $and: [
-                                            { $eq: ['$medicalClinic', '$$clinicId'] },
-                                            { $eq: ['$role', 'admin'] }
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    email: 1,
-                                    firstName: 1,
-                                    lastName: 1
-                                }
-                            }
-                        ],
-                        as: 'adminUsers'
-                    }
-                },
-                {
-                    $project: {
-                        _id: 1,
-                        unpaidInvoices: 1,
-                        count: 1,
-                        // Información de la clínica
-                        clinicName: '$clinicInfo.medicalClinicName',
-                        clinicEmail: '$clinicInfo.email',
-                        country: '$clinicInfo.country',
-                        plan: '$clinicInfo.plan',
-                        avatar: '$clinicInfo.avatar',
-                        licenceUser: '$clinicInfo.licenceUser',
-                        expiredSubsDate: '$clinicInfo.expiredSubsDate',
-                        // Información de usuarios admin
-                        adminEmails: {
-                            $map: {
-                                input: '$adminUsers',
-                                as: 'admin',
-                                in: '$$admin.email'
-                            }
-                        },
-                        adminNames: {
-                            $map: {
-                                input: '$adminUsers',
-                                as: 'admin',
-                                in: { $concat: ['$$admin.firstName', ' ', '$$admin.lastName'] }
-                            }
-                        },
+    //     const gracePeriodDays = 5; // Días de gracia después de la segunda factura
+    //     const overdueDate = subDays(new Date(), gracePeriodDays); //TODO: Revisar si este valor debe de ser 5 dias mas, ya que se debe de validar 5 dias despues de la segunda factura
+    //     // console.log(overdueDate, 'overdueDate'); // 31 
 
-                    }
+    //     try {
+    //         // Consulta única que obtiene clínicas con facturas impagas, información de la clínica y usuarios admin
+    //         const clinicsWithUnpaidAndUsers = await this.paymentModel.aggregate([
+    //             {
+    //                 $match: {
+    //                     paymentState: 4,
+    //                 }
+    //             },
+    //             {
+    //                 $sort: { createdAt: 1 } // Orden cronológico
+    //             },
+    //             {
+    //                 $group: {
+    //                     _id: '$medicalClinic',
+    //                     unpaidInvoices: { $push: '$$ROOT' },
+    //                     count: { $sum: 1 }
+    //                 }
+    //             },
+    //             {
+    //                 $match: {
+    //                     count: { $gte: 2 }
+    //                 }
+    //             },
+    //             {
+    //                 // Lookup para obtener información de la clínica
+    //                 $lookup: {
+    //                     from: 'medicalclinics', // ajusta el nombre de la colección
+    //                     localField: '_id',
+    //                     foreignField: '_id',
+    //                     as: 'clinicInfo'
+    //                 }
+    //             },
+    //             {
+    //                 $unwind: '$clinicInfo'
+    //             },
+    //             {
+    //                 // Filtrar solo clínicas activas
+    //                 $match: {
+    //                     'clinicInfo.isActive': true
+    //                 }
+    //             },
+    //             {
+    //                 // Lookup para obtener usuarios admin
+    //                 $lookup: {
+    //                     from: 'users',
+    //                     let: { clinicId: '$_id' },
+    //                     pipeline: [
+    //                         {
+    //                             $match: {
+    //                                 $expr: {
+    //                                     $and: [
+    //                                         { $eq: ['$medicalClinic', '$$clinicId'] },
+    //                                         { $eq: ['$role', 'admin'] }
+    //                                     ]
+    //                                 }
+    //                             }
+    //                         },
+    //                         {
+    //                             $project: {
+    //                                 email: 1,
+    //                                 firstName: 1,
+    //                                 lastName: 1
+    //                             }
+    //                         }
+    //                     ],
+    //                     as: 'adminUsers'
+    //                 }
+    //             },
+    //             {
+    //                 $project: {
+    //                     _id: 1,
+    //                     unpaidInvoices: 1,
+    //                     count: 1,
+    //                     // Información de la clínica
+    //                     clinicName: '$clinicInfo.medicalClinicName',
+    //                     clinicEmail: '$clinicInfo.email',
+    //                     country: '$clinicInfo.country',
+    //                     plan: '$clinicInfo.plan',
+    //                     avatar: '$clinicInfo.avatar',
+    //                     licenceUser: '$clinicInfo.licenceUser',
+    //                     expiredSubsDate: '$clinicInfo.expiredSubsDate',
+    //                     // Información de usuarios admin
+    //                     adminEmails: {
+    //                         $map: {
+    //                             input: '$adminUsers',
+    //                             as: 'admin',
+    //                             in: '$$admin.email'
+    //                         }
+    //                     },
+    //                     adminNames: {
+    //                         $map: {
+    //                             input: '$adminUsers',
+    //                             as: 'admin',
+    //                             in: { $concat: ['$$admin.firstName', ' ', '$$admin.lastName'] }
+    //                         }
+    //                     },
+
+    //                 }
+    //             }
+    //         ]);
+
+    //         const clinicsToNotifyOrSuspend = clinicsWithUnpaidAndUsers
+    //             .map(group => {
+    //                 const clinicId = group._id;
+    //                 const invoices = group.unpaidInvoices;
+
+    //                 if (invoices.length < 2) return null; // Saltar si no hay al menos dos facturas
+
+    //                 const firstInvoice = invoices[0];
+    //                 const secondInvoice = invoices[1];
+    //                 const secondInvoiceDate = new Date(secondInvoice.createdAt);
+    //                 const shouldSuspend = secondInvoiceDate < overdueDate;
+    //                 const daysOverdue = differenceInDays(new Date(), secondInvoiceDate);
+
+    //                 return {
+    //                     clinicId,
+    //                     clinicName: group.clinicName,
+    //                     clinicEmail: group.clinicEmail,
+    //                     adminEmails: group.adminEmails || [],
+    //                     adminNames: group.adminNames || [],
+    //                     shouldSuspend,
+    //                     daysOverdue,
+    //                     firstInvoiceInfo: {
+    //                         createdAt: firstInvoice.createdAt,
+    //                         period: firstInvoice.period,
+    //                         comment: firstInvoice.comment,
+    //                         amount: firstInvoice.amount,
+    //                         displayComment: firstInvoice.displayStatus,
+    //                     },
+    //                     secondInvoiceInfo: {
+    //                         createdAt: secondInvoice.createdAt,
+    //                         period: secondInvoice.period,
+    //                         amount: secondInvoice.amount,
+    //                         comment: secondInvoice.comment,
+    //                         displayComment: secondInvoice.displayStatus,
+    //                     },
+    //                     unpaidCount: invoices.length,
+    //                     clinicDetails: {
+    //                         country: group.country,
+    //                         plan: group.plan,
+    //                         avatar: group.avatar,
+    //                         licenceUser: group.licenceUser,
+    //                         expiredSubsDate: group.expiredSubsDate,
+    //                     },
+    //                 };
+    //             })
+    //             .filter(clinic => clinic !== null && clinic.shouldSuspend); // Solo clínicas con suspensión activa
+
+    //         console.log(clinicsToNotifyOrSuspend);
+
+
+    //         for (const clinic of clinicsToNotifyOrSuspend) {
+
+
+
+    //             if (clinic) {
+    //                 // Safe to use clinic.medicalClinicName, clinic.email, etc.
+
+
+    //                 const actionMsg = `📋 Clínica: ${clinic.clinicName}, Facturas impagas: ${clinic.unpaidCount}, Admins: ${clinic.adminNames.join(', ')}`;
+    //                 try {
+    //                     // await this.deactivateClinicForNonPayment(
+    //                     //     clinic.clinicId,
+    //                     //     `🚫 Superó los ${gracePeriodDays} días tras segunda factura.`
+    //                     // );
+
+    //                     const adminEmails = clinic.adminEmails;
+    //                     const clinicEmail = adminEmails;
+    //                     const emailsToNotify = [...new Set(adminEmails)]; // Solo admins
+
+    //                     // await this.notificationService.sendSuspensionNotification({
+    //                     //     emails: emailsToNotify,
+    //                     //     // clinicEmail: clinicEmail ?? null,
+    //                     //     data: clinic,
+    //                     // });
+
+    //                     this.logger.log(`✅ Suspendida y notificada: ${actionMsg}`);
+    //                 } catch (err) {
+    //                     this.logger.error(`❌ Error suspendiendo ${clinic.clinicName}:`, err.message);
+    //                 }
+    //                 // this.logger.warn(`🚫 Clínica ${clinic.clinicName} desactivada por: ${reason}`);
+    //                 // ...other logic...
+    //             } else {
+    //                 // this.logger.warn(`🚫 No se encontró la clínica con ID ${cli} para desactivar por: ${reason}`);
+    //             }
+
+
+
+    //         }
+
+    //         this.logger.log(`🏁 Evaluación completa. Clínicas procesadas: ${clinicsToNotifyOrSuspend.length}`);
+
+
+    //         // const clinicsToNotifyOrSuspend: Array<{
+    //         //     clinicId: any;
+    //         //     clinicName: string;
+    //         //     clinicEmail: string | undefined;
+    //         //     adminEmails: string[];
+    //         //     adminNames: string[];
+
+    //         //     shouldSuspend: boolean;
+    //         //     daysOverdue: number;
+    //         //     firstInvoiceInfo: {
+    //         //         createdAt: any;
+    //         //         amount: number;
+    //         //         period: any;
+    //         //         comment: any;
+    //         //         displayComment: any;
+    //         //     };
+    //         //     secondInvoiceInfo: {
+    //         //         createdAt: any;
+    //         //         period: any;
+    //         //         amount: number;
+    //         //         comment: any;
+    //         //         displayComment: any;
+    //         //     };
+    //         //     unpaidCount: number;
+    //         //     clinicDetails: {
+    //         //         country: string;
+    //         //         plan: string;
+    //         //         avatar: string;
+    //         //         licenceUser: number;
+    //         //         expiredSubsDate: Date;
+    //         //     };
+    //         // }> = [];
+
+
+    //         // for (const group of clinicsWithUnpaidAndUsers) {
+    //         //     const clinicId = group._id;
+    //         //     const invoices = group.unpaidInvoices;
+
+    //         //     // La segunda factura será la clave para la evaluación
+    //         //     const firtsInvoice = invoices[0];
+    //         //     const firtsInvoiceDate = new Date(firtsInvoice.createdAt);
+    //         //     const secondInvoice = invoices[1];
+    //         //     const secondInvoiceDate = new Date(secondInvoice.createdAt);
+
+    //         //     console.log(firtsInvoiceDate, 'firstInvoiceDate');
+    //         //     console.log(secondInvoiceDate, 'secondInvoiceDate');  //2025-05-17T15:40:32.671Z secondInvoiceDate
+
+
+
+    //         //     const shouldSuspend = secondInvoiceDate < overdueDate;
+
+    //         //     console.log(overdueDate, 'overdueDate');                    //31 daysOverdue
+    //         //     console.log(secondInvoiceDate, 'secondInvoiceDate');        //31 daysOverdue
+
+    //         //     const daysOverdue = differenceInDays(new Date(), secondInvoiceDate);
+
+    //         //     console.log(shouldSuspend, 'shouldSuspend');    //true shouldSuspend
+    //         //     // console.log(daysOverdue, 'daysOverdue');        //31 daysOverdue
+
+    //         //     clinicsToNotifyOrSuspend.push({
+    //         //         clinicId,
+    //         //         clinicName: group.clinicName,
+    //         //         clinicEmail: group.clinicEmail,
+    //         //         adminEmails: group.adminEmails || [],
+    //         //         adminNames: group.adminNames || [],
+
+    //         //         shouldSuspend,
+    //         //         daysOverdue,
+    //         //         firstInvoiceInfo: {
+    //         //             createdAt: firtsInvoice.createdAt,
+    //         //             period: firtsInvoice.period,
+    //         //             comment: firtsInvoice.comment,
+    //         //             amount: firtsInvoice.amount,
+    //         //             displayComment: firtsInvoice.displayStatus,
+    //         //         },
+    //         //         secondInvoiceInfo: {
+    //         //             createdAt: secondInvoice.createdAt,
+    //         //             period: secondInvoice.period,
+    //         //             amount: secondInvoice.amount,
+    //         //             comment: secondInvoice.comment,
+    //         //             displayComment: secondInvoice.displayStatus,
+    //         //         },
+    //         //         unpaidCount: invoices.length,
+    //         //         clinicDetails: {
+    //         //             country: group.country,
+    //         //             plan: group.plan,
+    //         //             avatar: group.avatar,
+    //         //             licenceUser: group.licenceUser,
+    //         //             expiredSubsDate: group.expiredSubsDate,
+    //         //         }
+    //         //     });
+    //         // }
+
+    //         // for (const clinic of clinicsToNotifyOrSuspend) {
+    //         //     const actionMsg = `📋 Clínica: ${clinic.clinicName}, Facturas impagas: ${clinic.unpaidCount}, Admins: ${clinic.adminNames.join(', ')}`;
+
+    //         //     // console.log(clinic, "clinicas");
+
+
+    //         //     if (clinic.shouldSuspend) {
+    //         //         try {
+    //         //             await this.deactivateClinicForNonPayment(
+    //         //                 clinic.clinicId,
+    //         //                 `🚫 Superó los ${gracePeriodDays} días tras segunda factura.`,
+    //         //             );
+
+    //         //             // Enviar notificación de suspensión a la clínica y a todos los admins
+    //         //             const emailsToNotify = [  ...(clinic.clinicEmail ? [clinic.clinicEmail] : []),
+    //         //             ...clinic.adminEmails
+    //         //             ].filter((email, index, arr) => arr.indexOf(email) === index); // Remover duplicados
+
+    //         //             // OPCIÓN 1: Enviar el objeto clinic completo
+    //         //             for (const email of emailsToNotify) {
+
+    //         //                 await this.notificationService.sendSuspensionNotification(email, clinic as any);
+    //         //             }
+
+    //         //             this.logger.log(`✅ Suspendida y notificada: ${actionMsg}`);
+    //         //         } catch (err) {
+    //         //             this.logger.error(`❌ Error suspendiendo ${clinic.clinicName}:`, err.message);
+    //         //         }
+    //         //     } 
+    //         // }
+    //         // this.logger.log(`🏁 Evaluación completa. Clínicas procesadas: ${clinicsToNotifyOrSuspend.length}`);
+    //     } catch (error) {
+    //         this.logger.error('💥 Error al evaluar facturas impagas:', error);
+    //     }
+    // }
+
+    @Cron('*/30 * * * * *')
+
+async checkOverdueInvoices(): Promise<void> {
+    this.logger.log('🔍 Iniciando evaluación de facturas impagas...');
+
+    const gracePeriodDays = 5; // Días de gracia después de la segunda factura
+    const overdueDate = subDays(new Date(), gracePeriodDays);
+
+    try {
+        // Consulta única que obtiene clínicas con facturas impagas, información de la clínica y usuarios admin
+        const clinicsWithUnpaidAndUsers = await this.paymentModel.aggregate([
+            {
+                $match: {
+                    paymentState: 4,
                 }
-            ]);
+            },
+            {
+                $sort: { createdAt: 1 } // Orden cronológico
+            },
+            {
+                $group: {
+                    _id: '$medicalClinic',
+                    unpaidInvoices: { $push: '$$ROOT' },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $match: {
+                    count: { $gte: 2 }
+                }
+            },
+            {
+                // Lookup para obtener información de la clínica
+                $lookup: {
+                    from: 'medicalclinics',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'clinicInfo'
+                }
+            },
+            {
+                $unwind: '$clinicInfo'
+            },
+            {
+                // Filtrar solo clínicas activas
+                $match: {
+                    'clinicInfo.isActive': true
+                }
+            },
+            {
+                // Lookup para obtener usuarios admin
+                $lookup: {
+                    from: 'users',
+                    let: { clinicId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$medicalClinic', '$$clinicId'] },
+                                        { $eq: ['$role', 'admin'] }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                email: 1,
+                                firstName: 1,
+                                lastName: 1
+                            }
+                        }
+                    ],
+                    as: 'adminUsers'
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    unpaidInvoices: 1,
+                    count: 1,
+                    // Información de la clínica
+                    clinicName: '$clinicInfo.medicalClinicName',
+                    clinicEmail: '$clinicInfo.email',
+                    country: '$clinicInfo.country',
+                    plan: '$clinicInfo.plan',
+                    avatar: '$clinicInfo.avatar',
+                    licenceUser: '$clinicInfo.licenceUser',
+                    expiredSubsDate: '$clinicInfo.expiredSubsDate',
+                    // Información de usuarios admin
+                    adminEmails: {
+                        $map: {
+                            input: '$adminUsers',
+                            as: 'admin',
+                            in: '$$admin.email'
+                        }
+                    },
+                    adminNames: {
+                        $map: {
+                            input: '$adminUsers',
+                            as: 'admin',
+                            in: { $concat: ['$$admin.firstName', ' ', '$$admin.lastName'] }
+                        }
+                    },
+                }
+            }
+        ]);
 
-            const clinicsToNotifyOrSuspend: Array<{
-                clinicId: any;
-                clinicName: string;
-                clinicEmail: string | undefined;
-                adminEmails: string[];
-                adminNames: string[];
+        // Definir tipo para la clínica procesada
+        interface ProcessedClinic {
+            clinicId: any;
+            clinicName: string;
+            clinicEmail: string;
+            adminEmails: string[];
+            adminNames: string[];
+            shouldSuspend: boolean;
+            daysOverdue: number;
+            firstInvoiceInfo: {
+                createdAt: Date;
+                period: string;
+                comment: string;
+                amount: number;
+                displayComment: string;
+            };
+            secondInvoiceInfo: {
+                createdAt: Date;
+                period: string;
+                amount: number;
+                comment: string;
+                displayComment: string;
+            };
+            unpaidCount: number;
+            clinicDetails: {
+                country: string;
+                plan: string;
+                avatar: string;
+                licenceUser: number;
+                expiredSubsDate: Date;
+            };
+        }
 
-                shouldSuspend: boolean;
-                daysOverdue: number;
-                firstInvoiceInfo: {
-                    createdAt: any;
-                    amount: number;
-                    period: any;
-                    comment: any;
-                    displayComment: any;
-                };
-                secondInvoiceInfo: {
-                    createdAt: any;
-                    period: any;
-                    amount: number;
-                    comment: any;
-                    displayComment: any;
-                };
-                unpaidCount: number;
-                clinicDetails: {
-                    country: string;
-                    plan: string;
-                    avatar: string;
-                    licenceUser: number;
-                    expiredSubsDate: Date;
-                };
-            }> = [];
-
-
-            for (const group of clinicsWithUnpaidAndUsers) {
+        // Procesar clínicas para determinar cuáles deben ser suspendidas
+        const clinicsToNotifyOrSuspend: ProcessedClinic[] = clinicsWithUnpaidAndUsers
+            .map(group => {
                 const clinicId = group._id;
                 const invoices = group.unpaidInvoices;
 
-                // La segunda factura será la clave para la evaluación
-                const firtsInvoice = invoices[0];
-                const firtsInvoiceDate = new Date(firtsInvoice.createdAt);
+                if (invoices.length < 2) return null; // Saltar si no hay al menos dos facturas
+
+                const firstInvoice = invoices[0];
                 const secondInvoice = invoices[1];
                 const secondInvoiceDate = new Date(secondInvoice.createdAt);
-
-                console.log(firtsInvoiceDate, 'firstInvoiceDate');
-                console.log(secondInvoiceDate, 'secondInvoiceDate');  //2025-05-17T15:40:32.671Z secondInvoiceDate
-                
-
-
                 const shouldSuspend = secondInvoiceDate < overdueDate;
-
-                console.log(overdueDate, 'overdueDate');                    //31 daysOverdue
-                console.log(secondInvoiceDate, 'secondInvoiceDate');        //31 daysOverdue
-
                 const daysOverdue = differenceInDays(new Date(), secondInvoiceDate);
 
-                console.log(shouldSuspend, 'shouldSuspend');    //true shouldSuspend
-                // console.log(daysOverdue, 'daysOverdue');        //31 daysOverdue
-
-                clinicsToNotifyOrSuspend.push({
+                return {
                     clinicId,
                     clinicName: group.clinicName,
                     clinicEmail: group.clinicEmail,
                     adminEmails: group.adminEmails || [],
                     adminNames: group.adminNames || [],
-
                     shouldSuspend,
                     daysOverdue,
                     firstInvoiceInfo: {
-                        createdAt: firtsInvoice.createdAt,
-                        period: firtsInvoice.period,
-                        comment: firtsInvoice.comment,
-                        amount: firtsInvoice.amount,
-                        displayComment: firtsInvoice.displayStatus,
+                        createdAt: firstInvoice.createdAt,
+                        period: firstInvoice.period,
+                        comment: firstInvoice.comment,
+                        amount: firstInvoice.amount,
+                        displayComment: firstInvoice.displayStatus,
                     },
                     secondInvoiceInfo: {
                         createdAt: secondInvoice.createdAt,
@@ -901,44 +1219,55 @@ export class InvoicesService {
                         avatar: group.avatar,
                         licenceUser: group.licenceUser,
                         expiredSubsDate: group.expiredSubsDate,
-                    }
-                });
-            }
+                    },
+                } as ProcessedClinic;
+            })
+            .filter((clinic): clinic is ProcessedClinic => clinic !== null && clinic.shouldSuspend); // Solo clínicas que deben ser suspendidas
 
-            for (const clinic of clinicsToNotifyOrSuspend) {
-                const actionMsg = `📋 Clínica: ${clinic.clinicName}, Facturas impagas: ${clinic.unpaidCount}, Admins: ${clinic.adminNames.join(', ')}`;
+        this.logger.log(`📊 Clínicas encontradas para suspensión: ${clinicsToNotifyOrSuspend.length}`);
 
-                console.log(clinic, "clinicas");
+        // Procesar cada clínica que debe ser suspendida
+        for (const clinic of clinicsToNotifyOrSuspend) {
+            const actionMsg = `📋 Clínica: ${clinic.clinicName}, Facturas impagas: ${clinic.unpaidCount}, Días vencido: ${clinic.daysOverdue}, Admins: ${clinic.adminNames.join(', ')}`;
+            
+            this.logger.log(`🔄 Procesando: ${actionMsg}`);
+
+            try {
+                // Desactivar la clínica
+                await this.deactivateClinicForNonPayment(
+                    clinic.clinicId,
+                    `🚫 Superó los ${gracePeriodDays} días tras segunda factura. Días vencido: ${clinic.daysOverdue}`
+                );
+
+                // Preparar emails para notificación
+                const emailsToNotify = [...new Set(clinic.adminEmails)]; // Eliminar duplicados
+
+                // console.log(emailsToNotify);
                 
 
-                if (clinic.shouldSuspend) {
-                    try {
-                        await this.deactivateClinicForNonPayment(
-                            clinic.clinicId,
-                            `🚫 Superó los ${gracePeriodDays} días tras segunda factura.`,
-                        );
+                if (emailsToNotify.length > 0) {
+                    // Enviar notificación de suspensión
+                    await this.notificationService.sendSuspensionNotification(emailsToNotify, clinic as any);
+                    
+                    this.logger.log(`✅ Suspendida y notificada: ${actionMsg}\n`);
+                } else {
+                    this.logger.warn(`⚠️ No se encontraron emails de admin para notificar: ${clinic.clinicName}`);
+                }
 
-                        // Enviar notificación de suspensión a la clínica y a todos los admins
-                        const emailsToNotify = [  ...(clinic.clinicEmail ? [clinic.clinicEmail] : []),
-                        ...clinic.adminEmails
-                        ].filter((email, index, arr) => arr.indexOf(email) === index); // Remover duplicados
-
-                        // OPCIÓN 1: Enviar el objeto clinic completo
-                        for (const email of emailsToNotify) {
-
-                            await this.notificationService.sendSuspensionNotification(email, clinic as any);
-                        }
-
-                        this.logger.log(`✅ Suspendida y notificada: ${actionMsg}`);
-                    } catch (err) {
-                        this.logger.error(`❌ Error suspendiendo ${clinic.clinicName}:`, err.message);
-                    }
-                } 
+            } catch (err) {
+                this.logger.error(`❌ Error procesando ${clinic.clinicName}:`, err.message);
+                // Continuar con la siguiente clínica en caso de error
+                continue;
             }
-            this.logger.log(`🏁 Evaluación completa. Clínicas procesadas: ${clinicsToNotifyOrSuspend.length}`);
-        } catch (error) {
-            this.logger.error('💥 Error al evaluar facturas impagas:', error);
         }
+
+        this.logger.log(`🏁 Evaluación completa. Clínicas procesadas: ${clinicsToNotifyOrSuspend.length}`);
+
+    } catch (error) {
+        this.logger.error('💥 Error al evaluar facturas impagas:', error);
+        throw error; // Re-lanzar el error para que pueda ser manejado por el caller
     }
-     
+}
+    
+
 }
