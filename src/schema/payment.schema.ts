@@ -70,6 +70,13 @@ export class Payment {
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
 
+export enum PaymentStateClinic {
+  GRATIS = 'Gratis',
+  SUSPENDIDA = 'Suspendida',
+  PAGO = 'Pago',
+
+}
+
 export enum PaymentState {
   PENDING = 0,
   PAID = 1,

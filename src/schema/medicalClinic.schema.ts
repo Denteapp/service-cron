@@ -17,10 +17,14 @@ export class MedicalClinic extends Document {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
   users: Types.ObjectId[] | UserDocument[];
- 
 
   @Prop({ required: true })
   medicalClinicName: string;
+  @Prop()
+  adminEmails?: string[];
+
+  @Prop()
+  adminNames?: string[]
 
   @Prop({ required: true })
   expiredSubsDate: Date;
