@@ -210,7 +210,7 @@
 <ul style="font-size: 14px; color:rgb(7, 86, 161); margin: 0; padding-left: 16px;">
    <li style="margin-bottom: 8px;">Tu factura ya se encuentra disponible y debe ser pagada antes de la fecha de vencimiento para evitar interrupciones en el servicio.</li>
   <li style="margin-bottom: 8px;">Puedes revisarla y descargarla directamente desde el portal de Pago Seguro.</li>
-  <li style="margin-bottom: 8px;">Una vez confirmado el pago, recibirás una notificación automática y podrás descargar tu comprobante desde el Pago Seguro.</li>
+  <li style="margin-bottom: 8px;">Una vez confirmado el pago, recibirás una notificación automática y podrás descargar tu comprobante desde el portal de Pago Seguro.</li>
   <li style="margin-bottom: 8px;">Si tienes dudas sobre los métodos de pago o necesitas asistencia, contáctanos.</li>
   <li>El incumplimiento en el pago podrá resultar en la suspensión temporal del acceso a la plataforma.</li>
 </ul>
@@ -224,7 +224,7 @@
     <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
       <mj-column>
         <mj-text font-size="22px" font-weight="600" color="#111827">
-          Acceso a tu Factura
+          Acceso al portal de Pago Seguro
         </mj-text>
         <mj-table css-class="portal-card">
           <tr>
@@ -233,7 +233,7 @@
                 <img src="https://portal.denteapp.com/email/login.png" alt="Portal de Pago Seguro dente" style="width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 16px;" />
               </a>
               <div style="font-size: 16px; font-weight: 500; color: #374151; margin-bottom: 16px;">
-                Puedes acceder al portal de pagos para:
+                Puedes acceder al portal de pago seguro para:
               </div>
               <ul style="font-size: 14px; color: #6b7280; text-align: left; max-width: 300px; margin: 0 auto 16px auto; padding-left: 20px;">
                 <li style="margin-bottom: 8px;">Descargar tu factura en PDF</li>
