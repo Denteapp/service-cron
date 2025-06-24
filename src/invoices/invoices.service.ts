@@ -278,7 +278,7 @@ export class InvoicesService {
     }
 
     // Cron job principal - ejecutar diariamente a las 9:00 AM
-    @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_DAY_AT_8AM)
     async processBillingCron(): Promise<void> {
 
         const startTime = new Date();
