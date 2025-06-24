@@ -61,7 +61,7 @@ interface SuspensionNotificationData {
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
-  private readonly resend = new Resend('re_Gra27vCZ_jHqBkANeJViMvoqyc8GMuNqt');
+  private readonly resend = new Resend(process.env.RESEND_API_KEY);
 
   /* ----------------------------------------------------------------
    * 1️⃣  AVISO DE NUEVA FACTURA (F1 o F2)
@@ -78,7 +78,7 @@ export class NotificationService {
       });
 
       if (result.error) throw new Error(result.error.message);
-      this.logger.log(`✅ Notificación de factura enviada a ${email}`);
+      // this.logger.log(`✅ Notificación de factura enviada a ${email}`);
     } catch (error) {
       this.logger.error(`❌ Error enviando notificación de factura a ${email}:`, error.message);
       throw error;

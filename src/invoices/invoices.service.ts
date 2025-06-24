@@ -28,7 +28,8 @@ export class InvoicesService {
     async findClinicsToInvoice(): Promise<MedicalClinicDocument[]> {
 
         const currentDate = new Date();
-        const fiveDaysFromNow = addDays(currentDate, 5);
+        const fiveDaysFromNow = addDays(currentDate, 1); // Usamos 1 día para seleccionar clínicas cuya suscripción vence mañana
+
 
         // Para obtener clínicas que expiran exactamente dentro de 5 días,
         // usamos startOfDay y endOfDay de date-fns para comparar solo la fecha
@@ -39,11 +40,11 @@ export class InvoicesService {
             {
                 $match: {
                     expiredSubsDate: {
-                        $gte: startOfFiveDaysFromNow,  // Desde las 00:00 del día que es 5 días desde hoy
+                        $gte: startOfFiveDaysFromNow,  // Desde las 00:00 del día que es 1 días desde hoy
                         $lt: endOfFiveDaysFromNow      // Hasta las 00:00 del día siguiente
                     },
                     isActive: true,
-                    paymentState: PaymentStateClinic.GRATIS, // Solo clínicas con estado de pago "Pago"
+                    paymentState: PaymentStateClinic.PAGO, // Solo clínicas con estado de pago "Pago"
                 }
             },
             {
@@ -262,7 +263,7 @@ export class InvoicesService {
         );
 
         this.logger.log(`✅ Factura generada para ${clinicData.medicalClinicName}`);
-        this.logger.log(`📅 Nueva fecha de expiración para ${clinicData.medicalClinicName}: ${newExpiredSubsDate.toISOString()} `);
+        // this.logger.log(`📅 Nueva fecha de expiración para ${clinicData.medicalClinicName}: ${newExpiredSubsDate.toISOString()} `);
 
         // Alertas especiales
         if (isSecondUnpaidInvoice) {
@@ -277,7 +278,7 @@ export class InvoicesService {
     }
 
     // Cron job principal - ejecutar diariamente a las 9:00 AM
-    @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_DAY_AT_8AM)
     async processBillingCron(): Promise<void> {
 
         const startTime = new Date();
@@ -395,13 +396,13 @@ export class InvoicesService {
         }
     }
 
-    // Cron job de desarrollo - cada 10 segundos (comentar en producción)
-    // @Cron(CronExpression.EVERY_MINUTE)
+    // // Cron job de desarrollo - cada 10 segundos (comentar en producción)
+    // // @Cron(CronExpression.EVERY_MINUTE)
 
-    async processBillingCronDev(): Promise<void> {
-        this.logger.debug('🧪 [DESARROLLO] Ejecutando cron job de prueba...');
-        await this.processBillingCron();
-    }
+    // async processBillingCronDev(): Promise<void> {
+    //     this.logger.debug('🧪 [DESARROLLO] Ejecutando cron job de prueba...');
+    //     await this.processBillingCron();
+    // }
 
 
     // @Cron(CronExpression.EVERY_DAY_AT_8AM)

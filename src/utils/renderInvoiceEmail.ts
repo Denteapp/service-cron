@@ -55,7 +55,7 @@ type InvoiceTemplateData = {
 };
 
 export function renderInvoiceEmailMJML(data: InvoiceTemplateData): string {
-  console.log(data);
+  // console.log(data);
   
   const filePath = path.join(process.cwd(), 'src', 'invoices', 'templates', 'invoice-created-notification.mjml');
   const mjmlTemplate = fs.readFileSync(filePath, 'utf-8');
