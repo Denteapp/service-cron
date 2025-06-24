@@ -20,7 +20,7 @@ type PopulatedAppointment = Appointment & {
 @Injectable()
 export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
-  private readonly resend = new Resend('re_Gra27vCZ_jHqBkANeJViMvoqyc8GMuNqt');  // Inserta tu clave de API de Resend
+  private readonly resend = new Resend(process.env.RESEND_API_KEY);  // Inserta tu clave de API de Resend
 
   constructor(
     @InjectModel(Appointment.name)
