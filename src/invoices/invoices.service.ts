@@ -25,82 +25,79 @@ export class InvoicesService {
     // Obtener el período actual en formato MM/YY
     getCurrentPeriod = () => format(new Date(), 'MM/yy')
     // Buscar clínicas que necesitan facturación (5 días antes de expirar)
-    async findClinicsToInvoice(): Promise<MedicalClinicDocument[]> {
+   async findClinicsToInvoice(): Promise<MedicalClinicDocument[]> {
+    const currentDate = new Date();
+    
+    // Para obtener clínicas que expiran exactamente HOY,
+    // usamos startOfDay y endOfDay para comparar solo la fecha actual
+    const startOfToday = startOfDay(currentDate); // 00:00:00 de hoy
+    const endOfToday = startOfDay(addDays(currentDate, 1)); // 00:00:00 de mañana
 
-        const currentDate = new Date();
-        const fiveDaysFromNow = addDays(currentDate, 1); // Usamos 1 día para seleccionar clínicas cuya suscripción vence mañana
-
-
-        // Para obtener clínicas que expiran exactamente dentro de 5 días,
-        // usamos startOfDay y endOfDay de date-fns para comparar solo la fecha
-        const startOfFiveDaysFromNow = startOfDay(fiveDaysFromNow); // 00:00:00 del día 5
-        const endOfFiveDaysFromNow = startOfDay(addDays(fiveDaysFromNow, 1)); // 00:00:00 del día 6
-
-        return this.medicalClinicModel.aggregate([
-            {
-                $match: {
-                    expiredSubsDate: {
-                        $gte: startOfFiveDaysFromNow,  // Desde las 00:00 del día que es 1 días desde hoy
-                        $lt: endOfFiveDaysFromNow      // Hasta las 00:00 del día siguiente
-                    },
-                    isActive: true,
-                    paymentState: PaymentStateClinic.PAGO, // Solo clínicas con estado de pago "Pago"
-                }
-            },
-            {
-                $lookup: {
-                    from: 'users', // asegúrate de que esta es la colección real
-                    let: { clinicId: '$_id' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ['$medicalClinic', '$$clinicId'] },
-                                        { $eq: ['$role', 'admin'] }
-                                    ]
-                                }
-                            }
-                        },
-                        {
-                            $project: {
-                                email: 1,
-                                firstName: 1,
-                                lastName: 1
+    return this.medicalClinicModel.aggregate([
+        {
+            $match: {
+                expiredSubsDate: {
+                    $gte: startOfToday,  // Desde las 00:00 de hoy
+                    $lt: endOfToday      // Hasta las 00:00 de mañana
+                },
+                isActive: true,
+                paymentState: PaymentStateClinic.PAGO, // Solo clínicas con estado de pago "Pago"
+            }
+        },
+        {
+            $lookup: {
+                from: 'users', // asegúrate de que esta es la colección real
+                let: { clinicId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$medicalClinic', '$$clinicId'] },
+                                    { $eq: ['$role', 'admin'] }
+                                ]
                             }
                         }
-                    ],
-                    as: 'adminUsers'
-                }
-            },
-            {
-                $project: {
-                    _id: 1,
-                    medicalClinicName: 1,
-                    country: 1,
-                    plan: 1,
-                    avatar: 1,
-                    email: 1,
-                    licenceUser: 1,
-                    expiredSubsDate: 1,
-                    adminEmails: {
-                        $map: {
-                            input: '$adminUsers',
-                            as: 'admin',
-                            in: '$$admin.email'
-                        }
                     },
-                    adminNames: {
-                        $map: {
-                            input: '$adminUsers',
-                            as: 'admin',
-                            in: { $concat: ['$$admin.firstName', ' ', '$$admin.lastName'] }
+                    {
+                        $project: {
+                            email: 1,
+                            firstName: 1,
+                            lastName: 1
                         }
+                    }
+                ],
+                as: 'adminUsers'
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                medicalClinicName: 1,
+                country: 1,
+                plan: 1,
+                avatar: 1,
+                email: 1,
+                licenceUser: 1,
+                expiredSubsDate: 1,
+                adminEmails: {
+                    $map: {
+                        input: '$adminUsers',
+                        as: 'admin',
+                        in: '$$admin.email'
+                    }
+                },
+                adminNames: {
+                    $map: {
+                        input: '$adminUsers',
+                        as: 'admin',
+                        in: { $concat: ['$$admin.firstName', ' ', '$$admin.lastName'] }
                     }
                 }
             }
-        ]);
-    }
+        }
+    ]);
+}
 
     // Contar facturas impagadas para una clínica
     async countUnpaidInvoices(clinicId: string): Promise<number> {
