@@ -546,10 +546,20 @@ export class SchedulerService {
             doctorTitle,
           );
         } else if (type === '2h') {
+          // Obtener título del doctor con artículo según género
+          const doctorGender = (appointmentUser && appointmentUser.gender) || 'male';
+          const doctorTitleWithArticle = doctorGender?.toLowerCase() === 'female' ? 'La Dra' : 'El Dr';
+          
+          // Nombre del doctor SIN título
+          const doctorNameOnly = (appointmentUser && typeof appointmentUser === 'object' && appointmentUser.firstName)
+            ? `${appointmentUser.firstName} ${appointmentUser.lastName || ''}`.trim()
+            : 'nuestro equipo';
+
           messageId = await this.whatsappService.sendAppointmentReminder2hTemplate(
             phoneNumber,
             patient.firstName,
-            doctorName,
+            doctorTitleWithArticle,
+            doctorNameOnly,
           );
         } else if (type === 'morning') {
           // Cron matutino especial: usa template de 4h para citas sin notificación previa

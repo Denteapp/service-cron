@@ -451,11 +451,14 @@ export class WhatsAppService {
 
   /**
    * Template: Recordatorio 2h antes sin botones (para citas YA confirmadas)
+   * @param doctorTitle Título con artículo: "La Dra" o "El Dr"
+   * @param doctorName Nombre del doctor SIN título
    * @returns messageId de WhatsApp para tracking de estado
    */
   async sendAppointmentReminder2hTemplate(
     phoneNumber: string,
     patientName: string,
+    doctorTitle: string,
     doctorName: string,
   ): Promise<string> {
     let formattedPhone: string;
@@ -483,6 +486,7 @@ export class WhatsAppService {
               type: 'body',
               parameters: [
                 { type: 'text', text: patientName },
+                { type: 'text', text: doctorTitle },
                 { type: 'text', text: doctorName },
               ],
             },
