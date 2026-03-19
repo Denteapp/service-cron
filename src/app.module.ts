@@ -5,22 +5,26 @@ import { SchedulerModule } from './scheduler/scheduler.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { InvoicesModule } from './invoices/invoices.module';
 import { NotificationService } from './notification/notification.service';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 
 
 @Module({
   imports: [
-     ConfigModule.forRoot({ isGlobal: true }),
-     MongooseModule.forRootAsync({
-       imports: [ConfigModule],
-       useFactory: async (configService: ConfigService) => ({
-         uri: configService.get<string>('MONGODB_URI') || '',
-       }),
-       inject: [ConfigService],
-     }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI') || '',
+      }),
+      inject: [ConfigService],
+    }),
     //  TasksModule, 
-     SchedulerModule, 
-     InvoicesModule],
+    SchedulerModule,
+    InvoicesModule,
+    WhatsAppModule,
+    AppointmentsModule],
   providers: [NotificationService],
 })
-export class AppModule {}
+export class AppModule { }

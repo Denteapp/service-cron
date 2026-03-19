@@ -4,9 +4,35 @@ import { Model, Types } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { addDays, addMonths, differenceInDays, format, startOfDay, subDays, subMonths } from 'date-fns';
 import { MedicalClinic, MedicalClinicDocument, MedicalClinicWithAdmin } from '../schema/medicalClinic.schema';
+import { Subscription, SubscriptionDocument } from '../schema/subscription.schema';
 import { canGenerateInvoiceCode, Payment, PaymentDocument, PaymentState, PaymentStateClinic } from '../schema/payment.schema';
 import { NotificationService, SuspensionData } from '../notification/notification.service';
 import { InvoiceValidationDto, InvoiceGenerationResultDto } from '../dto/invoice-validator.dto';
+
+// Clínicas de prueba para desarrollo local - MANTENER SIEMPRE
+const TEST_CLINIC_ID = [
+    '6613754dbb593f4d49c218a4', // Clínica de prueba 1
+    '66140c1b058ec6710b7f4f7f', // Clínica de prueba 2
+];
+
+// Interfaz para datos de facturación desde el aggregate
+export interface SubscriptionBillingData {
+    _id: Types.ObjectId; // Subscription ID
+    medicalClinic: Types.ObjectId; // Clinic ID
+    medicalClinicName: string;
+    country: string;
+    currency: string;
+    planName: string;
+    planPrice: number;
+    additionalUserPrice: number;
+    billingFrequency: string;
+    nextBillingDate: Date;
+    endDate: Date;
+    usersCount: number;
+    rootEmail: string;
+    rootName: string;
+    clinicIsActive: boolean;
+}
 
 
 
@@ -17,6 +43,8 @@ export class InvoicesService {
     constructor(
         @InjectModel(MedicalClinic.name)
         private medicalClinicModel: Model<MedicalClinicDocument>,
+        @InjectModel(Subscription.name)
+        private subscriptionModel: Model<SubscriptionDocument>,
         @InjectModel(Payment.name)
         private paymentModel: Model<PaymentDocument>,
         private notificationService: NotificationService,
@@ -24,80 +52,103 @@ export class InvoicesService {
 
     // Obtener el período actual en formato MM/YY
     getCurrentPeriod = () => format(new Date(), 'MM/yy')
-    // Buscar clínicas que necesitan facturación (5 días antes de expirar)
-   async findClinicsToInvoice(): Promise<MedicalClinicDocument[]> {
-    const currentDate = new Date();
     
-    // Para obtener clínicas que expiran exactamente HOY,
-    // usamos startOfDay y endOfDay para comparar solo la fecha actual
-    const startOfToday = startOfDay(currentDate); // 00:00:00 de hoy
-    const endOfToday = startOfDay(addDays(currentDate, 1)); // 00:00:00 de mañana
+    // Buscar suscripciones que necesitan facturación (endDate = hoy)
+    async findClinicsToInvoice(): Promise<SubscriptionBillingData[]> {
+        const currentDate = new Date();
+    
+        // Para obtener clínicas que expiran exactamente HOY,
+        // usamos startOfDay y endOfDay para comparar solo la fecha actual
+        const startOfToday = startOfDay(currentDate); // 00:00:00 de hoy
+        const endOfToday = startOfDay(addDays(currentDate, 1)); // 00:00:00 de mañana
 
-    return this.medicalClinicModel.aggregate([
-        {
-            $match: {
-                expiredSubsDate: {
-                    $gte: startOfToday,  // Desde las 00:00 de hoy
-                    $lt: endOfToday      // Hasta las 00:00 de mañana
-                },
-                isActive: true,
-                paymentState: PaymentStateClinic.PAGO, // Solo clínicas con estado de pago "Pago"
-            }
-        },
-        {
-            $lookup: {
-                from: 'users', // asegúrate de que esta es la colección real
-                let: { clinicId: '$_id' },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: {
-                                $and: [
-                                    { $eq: ['$medicalClinic', '$$clinicId'] },
-                                    { $eq: ['$role', 'admin'] }
-                                ]
+        this.logger.log(`🔍 Buscando suscripciones con endDate = HOY (${startOfToday.toISOString().split('T')[0]})`);
+
+        return this.subscriptionModel.aggregate([
+            {
+                // Filtrar solo suscripciones mensuales activas con endDate = hoy
+                $match: {
+                    endDate: {
+                        $gte: startOfToday,  // Desde las 00:00 de hoy
+                        $lt: endOfToday      // Hasta las 00:00 de mañana
+                    },
+                    billingFrequency: 'Mensual',
+                    isActive: true,
+                }
+            },
+            {
+                // Lookup para obtener información de la clínica (solo para verificar existencia)
+                $lookup: {
+                    from: 'medicalclinics',
+                    localField: 'medicalClinic',
+                    foreignField: '_id',
+                    as: 'clinicInfo'
+                }
+            },
+            {
+                // Desempaquetar el array de clínica
+                $unwind: {
+                    path: '$clinicInfo',
+                    preserveNullAndEmptyArrays: false // Solo mantener suscripciones con clínica válida
+                }
+            },
+            {
+                // Lookup para obtener el usuario root (propietario de la clínica)
+                $lookup: {
+                    from: 'users',
+                    let: { clinicId: '$medicalClinic' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$medicalClinic', '$$clinicId'] },
+                                        { $eq: ['$role', 'root'] }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                email: 1,
+                                firstName: 1,
+                                lastName: 1
                             }
                         }
-                    },
-                    {
-                        $project: {
-                            email: 1,
-                            firstName: 1,
-                            lastName: 1
-                        }
-                    }
-                ],
-                as: 'adminUsers'
-            }
-        },
-        {
-            $project: {
-                _id: 1,
-                medicalClinicName: 1,
-                country: 1,
-                plan: 1,
-                avatar: 1,
-                email: 1,
-                licenceUser: 1,
-                expiredSubsDate: 1,
-                adminEmails: {
-                    $map: {
-                        input: '$adminUsers',
-                        as: 'admin',
-                        in: '$$admin.email'
-                    }
-                },
-                adminNames: {
-                    $map: {
-                        input: '$adminUsers',
-                        as: 'admin',
-                        in: { $concat: ['$$admin.firstName', ' ', '$$admin.lastName'] }
-                    }
+                    ],
+                    as: 'rootUsers'
+                }
+            },
+            {
+                // Desempaquetar el usuario root (debe haber solo uno)
+                $unwind: {
+                    path: '$rootUsers',
+                    preserveNullAndEmptyArrays: false // Solo procesar suscripciones con usuario root
+                }
+            },
+            {
+                $project: {
+                    _id: 1, // Subscription ID
+                    medicalClinic: 1, // Clinic ID
+                    medicalClinicName: 1,
+                    country: 1,
+                    currency: 1,
+                    planName: 1,
+                    planPrice: 1,
+                    additionalUserPrice: 1,
+                    billingFrequency: 1,
+                    nextBillingDate: 1,
+                    endDate: 1,
+                    usersCount: '$currentUsage.usersCount',
+                    // Información del usuario root
+                    rootEmail: '$rootUsers.email',
+                    rootName: { $concat: ['$rootUsers.firstName', ' ', '$rootUsers.lastName'] },
+                    // Info de la clínica (solo de referencia, no para filtrado)
+                    clinicIsActive: '$clinicInfo.isActive',
                 }
             }
-        }
-    ]);
-}
+        ]);
+    }
 
     // Contar facturas impagadas para una clínica
     async countUnpaidInvoices(clinicId: string): Promise<number> {
@@ -167,8 +218,6 @@ export class InvoicesService {
 
         if (clinic) {
             this.logger.warn(`🚫 Clínica ${clinic.medicalClinicName} desactivada por: ${reason}`);
-            // Aquí podrías enviar una notificación de suspensión
-            // await this.notificationService.sendSuspensionNotification(clinic.email, reason);
         } else {
             this.logger.warn(`🚫 No se encontró la clínica con ID ${clinicId} para desactivar por: ${reason}`);
         }
@@ -189,15 +238,13 @@ export class InvoicesService {
         return `INIT-${clinicId}-${random}`;
     }
 
-
-
-    async generateInvoice(clinicData: MedicalClinicDocument): Promise<InvoiceGenerationResultDto> {
-
+    async generateInvoice(subscriptionData: SubscriptionBillingData): Promise<InvoiceGenerationResultDto> {
         const currentPeriod = this.getCurrentPeriod();
+        const clinicId = subscriptionData.medicalClinic.toString();
 
         // Verificar si ya existe factura para este período
         const existingInvoice = await this.paymentModel.findOne({
-            medicalClinic: clinicData._id,
+            medicalClinic: subscriptionData.medicalClinic,
             period: currentPeriod,
         });
 
@@ -206,7 +253,7 @@ export class InvoicesService {
         }
 
         // Validar si se puede generar la factura
-        const validation = await this.canGenerateInvoice(clinicData._id.toString());
+        const validation = await this.canGenerateInvoice(clinicId);
         if (!validation.canGenerate) {
             throw new Error(`No se puede generar factura: ${validation.reason}`);
         }
@@ -214,23 +261,23 @@ export class InvoicesService {
         // Determinar si es la segunda factura impagada
         const isSecondUnpaidInvoice = validation.unpaidCount === 1;
 
-        // Crear la factura
-        const initialPrice = 800;
-        const additionalPricePerProfessional = 200;
-        const licenceUser = clinicData.licenceUser ?? 1;
-        const totalPrice = initialPrice + (licenceUser - 1) * additionalPricePerProfessional;
+        // Calcular precio total usando datos de la suscripción
+        const usersCount = subscriptionData.usersCount ?? 1;
+        const totalPrice = subscriptionData.planPrice + ((usersCount - 1) * subscriptionData.additionalUserPrice);
 
+        // Crear la factura
         const invoice = new this.paymentModel({
-            medicalClinic: clinicData._id,
+            medicalClinic: subscriptionData.medicalClinic,
             amount: totalPrice,
-            description: `Factura mensual - ${clinicData.medicalClinicName} (${currentPeriod})`,
+            description: `Factura mensual - ${subscriptionData.medicalClinicName} (${currentPeriod})`,
             period: currentPeriod,
+            currency: subscriptionData.currency || 'HNL',
             user: '',
             paymentState: PaymentState.GENERATED,
-            transactionID: this.generateTransactionID(clinicData._id.toString()),
+            transactionID: this.generateTransactionID(clinicId),
             bankName: '',
-            externalReference: this.generateExternalReference(currentPeriod, clinicData._id.toString()),
-            holderName: clinicData.medicalClinicName,
+            externalReference: this.generateExternalReference(currentPeriod, clinicId),
+            holderName: subscriptionData.medicalClinicName,
             recipientImg: '',
             paymentMethod: 'Transferencia',
             last4Digits: '0000',
@@ -243,28 +290,48 @@ export class InvoicesService {
             displayStatus: 'Factura emitida, pago en espera',
         });
 
-        await invoice.save();
+        try {
+            await invoice.save();
+        } catch (error) {
+            // Si es un error de duplicado (código 11000 de MongoDB), significa que ya existe
+            if (error.code === 11000) {
+                throw new Error(`Ya existe una factura para ${subscriptionData.medicalClinicName} en el período ${currentPeriod}`);
+            }
+            throw error; // Re-lanzar otros errores
+        }
 
-        // ACTUALIZA LA FECHA DE EXPIRACIÓN DE LA SUSCRIPCIÓN 1 mes mas
-        const currentExpiredDate = clinicData.expiredSubsDate;
-        const newExpiredSubsDate = addMonths(currentExpiredDate, 1);
+        // ACTUALIZAR FECHAS: Extender suscripción por 1 mes
+        const currentEndDate = new Date(subscriptionData.endDate);
+        const newEndDate = addMonths(currentEndDate, 1);
 
-        await this.medicalClinicModel.findByIdAndUpdate(
-            clinicData._id,
+        // Actualizar fechas en Subscription
+        const updatedSubscription = await this.subscriptionModel.findByIdAndUpdate(
+            subscriptionData._id,
             {
-                expiredSubsDate: newExpiredSubsDate,
-                // También podrías actualizar el paymentState si es necesario
-                // paymentState: 'Pago' // o el estado que corresponda
+                endDate: newEndDate,
+                nextBillingDate: newEndDate,
             },
             { new: true }
         );
 
-        this.logger.log(`✅ Factura generada para ${clinicData.medicalClinicName}`);
-        // this.logger.log(`📅 Nueva fecha de expiración para ${clinicData.medicalClinicName}: ${newExpiredSubsDate.toISOString()} `);
+        if (!updatedSubscription) {
+            this.logger.warn(`⚠️ No se pudo actualizar la suscripción ${subscriptionData._id}`);
+        } else {
+            this.logger.log(`📅 Fechas actualizadas: próxima facturación ${newEndDate.toISOString().split('T')[0]}`);
+        }
+
+        // Actualizar también MedicalClinic.expiredSubsDate (sincronización legacy)
+        await this.medicalClinicModel.findByIdAndUpdate(
+            subscriptionData.medicalClinic,
+            { expiredSubsDate: newEndDate },
+            { new: true }
+        );
+
+        this.logger.log(`✅ Factura generada para ${subscriptionData.medicalClinicName} - Monto: $${totalPrice} ${subscriptionData.currency || 'HNL'}`);
 
         // Alertas especiales
         if (isSecondUnpaidInvoice) {
-            this.logger.warn(`⚠️  ALERTA: ${clinicData.medicalClinicName} tiene 2 facturas impagadas. Próxima acción: suspensión.`);
+            this.logger.warn(`⚠️ ALERTA: ${subscriptionData.medicalClinicName} tiene 2 facturas impagadas. Próxima acción: suspensión.`);
         }
 
         return {
@@ -274,22 +341,23 @@ export class InvoicesService {
         };
     }
 
-    // Cron job principal - ejecutar diariamente a las 9:00 AM
-    @Cron(CronExpression.EVERY_DAY_AT_8AM)
+    // 🔄 CRON ACTIVO: Ejecutar una vez al día a las 8:15 AM
+    @Cron('15 8 * * *')
     async processBillingCron(): Promise<void> {
-
         const startTime = new Date();
 
-        this.logger.log(`🚀 Iniciando proceso de facturación - ${startTime.toISOString()}`);
+        this.logger.log(`🚀 [CRON FACTURAS] Iniciando proceso de facturación - ${startTime.toISOString()}`);
 
         try {
-            // 1. Buscar clínicas que necesiten facturación
-            const clinicsToInvoice = await this.findClinicsToInvoice() as MedicalClinicDocument[];
+            // 1. Buscar suscripciones que necesiten facturación (ahora basado en Subscription)
+            const subscriptionsToInvoice = await this.findClinicsToInvoice();
 
-            this.logger.log(`📋 Encontradas ${clinicsToInvoice.length}  clínicas para procesar`);
+            this.logger.log(`📋 Encontradas ${subscriptionsToInvoice.length} suscripciones para procesar`);
 
-            if (clinicsToInvoice.length === 0) {
-                this.logger.log('ℹ️  No hay clínicas para facturar en este momento');
+            if (subscriptionsToInvoice.length === 0) {
+                const endTime = new Date();
+                const duration = endTime.getTime() - startTime.getTime();
+                this.logger.log(`ℹ️  [CRON FACTURAS] Finalizado - No hay clínicas para facturar | Duración: ${duration}ms`);
                 return;
             }
 
@@ -297,83 +365,112 @@ export class InvoicesService {
             let errorCount = 0;
             let skippedCount = 0;
 
-            for (const clinic of clinicsToInvoice) {
+            for (const subscription of subscriptionsToInvoice) {
                 try {
                     this.logger.log(`--------------------------------------------------------------------------`);
-                    this.logger.log(`Procesando: ${clinic.medicalClinicName}`);
+                    this.logger.log(`Procesando: ${subscription.medicalClinicName}`);
 
                     // Verificar si ya tiene factura este mes
                     const currentPeriod = this.getCurrentPeriod();
                     const hasCurrentInvoice = await this.paymentModel.findOne({
-                        medicalClinic: clinic._id,
+                        medicalClinic: subscription.medicalClinic,
                         period: currentPeriod,
                     });
 
-                    // this.logger.log(`🔍 Tiene factura actual: ${hasCurrentInvoice}`);
-                    // this.logger.log(`🔍 Verificando factura para ${clinic.medicalClinicName} - Período: ${currentPeriod}`);
-
                     if (hasCurrentInvoice) {
-                        this.logger.log(`⏭️  ${clinic.medicalClinicName}: Ya tiene factura para ${currentPeriod}`);
+                        this.logger.log(`⏭️  ${subscription.medicalClinicName}: Ya tiene factura para ${currentPeriod}`);
                         skippedCount++;
                         continue;
                     }
 
                     // 2. Verificar si puede generar factura
-                    const validation = await this.canGenerateInvoice(clinic._id.toString());
+                    const validation = await this.canGenerateInvoice(subscription.medicalClinic.toString());
 
-                    this.logger.log(`Validación para ${clinic.medicalClinicName}`);
+                    this.logger.log(`Validación para ${subscription.medicalClinicName}`);
                     if (validation.canGenerate) {
-                        // Obtener el documento completo de la clínica desde la base de datos
-                        const clinicDoc = await this.medicalClinicModel.findById(clinic._id);
-
-                        if (!clinicDoc) {
-                            this.logger.warn(`⚠️ No se encontró el documento de la clínica con ID ${clinic._id}`);
-                            skippedCount++;
-                            continue;
-                        }
-
-                        // 3. Generar factura
-                        const result = await this.generateInvoice(clinicDoc);
+                        // 3. Generar factura (ahora con subscriptionData directamente)
+                        const result = await this.generateInvoice(subscription);
 
                         // 4. Enviar notificación por email
                         try {
-                            // Usar el email del admin si está disponible, si no, usar el de la clínica
-                            const notificationEmail = clinic.adminEmails?.[0] || clinic.email || null;
+                            // Usar el email del usuario root
+                            const notificationEmail = subscription.rootEmail;
                             if (notificationEmail) {
+                                // Calcular desglose de facturación
+                                const usersCount = subscription.usersCount ?? 1;
+                                const additionalUsers = Math.max(0, usersCount - 1);
+                                const additionalUsersTotal = additionalUsers * subscription.additionalUserPrice;
+                                
+                                // LOG TEMPORAL PARA DEBUG
+                                this.logger.log(`📊 Desglose de facturación para ${subscription.medicalClinicName}:`);
+                                this.logger.log(`   - Plan: ${subscription.planName}`);
+                                this.logger.log(`   - Precio base: ${subscription.planPrice}`);
+                                this.logger.log(`   - Total usuarios: ${usersCount}`);
+                                this.logger.log(`   - Usuarios adicionales: ${additionalUsers}`);
+                                this.logger.log(`   - Precio por usuario adicional: ${subscription.additionalUserPrice}`);
+                                this.logger.log(`   - Total usuarios adicionales: ${additionalUsersTotal}`);
+                                this.logger.log(`   - Total factura: ${result.invoice.amount}`);
+                                
                                 await this.notificationService.sendInvoiceNotification(
                                     notificationEmail,
                                     {
                                         invoice: result.invoice,
-                                        clinic: clinic // Agregas el objeto clinic aquí
+                                        clinic: {
+                                            medicalClinicName: subscription.medicalClinicName,
+                                            email: subscription.rootEmail,
+                                            _id: subscription.medicalClinic.toString(),
+                                            adminNames: [subscription.rootName],
+                                            adminEmails: [subscription.rootEmail],
+                                            expiredSubsDate: subscription.endDate.toISOString(),
+                                            plan: subscription.planName,
+                                            licenceUser: usersCount,
+                                            avatar: '',
+                                            country: subscription.country,
+                                        },
+                                        billing: {
+                                            planName: subscription.planName,
+                                            basePrice: subscription.planPrice,
+                                            additionalUsers: additionalUsers,
+                                            additionalUserPrice: subscription.additionalUserPrice,
+                                            additionalUsersTotal: additionalUsersTotal,
+                                            total: result.invoice.amount,
+                                            currency: subscription.currency || 'HNL',
+                                        },
+                                        isSecondUnpaidInvoice: result.isSecondUnpaidInvoice,
+                                        unpaidCount: result.unpaidCount,
                                     }
                                 );
                                 this.logger.log(`📧 Notificación enviada a ${notificationEmail}`);
                             } else {
                                 this.logger.warn(
-                                    `⚠️ Clínica ${clinic.medicalClinicName} no tiene email registrado, no se envió notificación.`
+                                    `⚠️ Clínica ${subscription.medicalClinicName} no tiene email registrado, no se envió notificación.`
                                 );
                             }
                         } catch (emailError) {
                             this.logger.error(
                                 `📧❌ Error enviando email:`,
-                                emailError.message
+                                emailError.message,
+                                emailError.stack
                             );
                         }
 
                         successCount++;
                     } else {
-                        this.logger.log(`⏭️  ${clinic.medicalClinicName}: ${validation.reason}`);
+                        this.logger.log(`⏭️  ${subscription.medicalClinicName}: ${validation.reason}`);
                         skippedCount++;
                     }
 
                     // Si tiene 2 facturas impagadas, considerar suspensión
                     if (validation.code === 'MAX_UNPAID_REACHED') {
-                        this.logger.log(`⚠️ Evaluando suspensión para ${clinic.medicalClinicName}...`);
+                        this.logger.log(`⚠️ Evaluando suspensión para ${subscription.medicalClinicName}...`);
                         // Aquí podrías agregar lógica adicional para suspender después de X días
                     }
 
                 } catch (error) {
-                    this.logger.error(`❌ Error procesando ${clinic.medicalClinicName}:`, error.message);
+                    this.logger.error(
+                        `❌ Error procesando ${subscription.medicalClinicName}: ${error.message}`,
+                        error.stack
+                    );
                     errorCount++;
                 }
             }
@@ -382,14 +479,18 @@ export class InvoicesService {
             const endTime = new Date();
             const duration = endTime.getTime() - startTime.getTime();
 
-            this.logger.log(`\n📊 RESUMEN DEL PROCESO:`);
+            this.logger.log(`\n📊 [RESUMEN FACTURAS]:`);
             this.logger.log(`   ✅ Exitosas: ${successCount}`);
             this.logger.log(`   ⏭️ Omitidas: ${skippedCount}`);
             this.logger.log(`   ❌ Errores: ${errorCount}`);
             this.logger.log(`   ⏱️ Duración: ${duration}ms`);
             this.logger.log(`   🏁 Finalizado: ${endTime.toISOString()} \n`);
         } catch (error) {
-            this.logger.error('💥 Error crítico en el proceso de facturación:', error);
+            this.logger.error(
+                '💥 [CRON FACTURAS] Error crítico en el proceso de facturación:',
+                error.message,
+                error.stack
+            );
         }
     }
 
@@ -402,8 +503,8 @@ export class InvoicesService {
     // }
 
 
-    // @Cron(CronExpression.EVERY_DAY_AT_8AM)
-
+    // 🔄 DESHABILITADO: Ejecutar todos los días a las 10:15 AM (verificación de facturas vencidas y suspensiones)
+    // @Cron('15 10 * * *')
     async checkOverdueInvoices(): Promise<void> {
         this.logger.log('🔍 Iniciando evaluación de facturas impagas...');
 
@@ -550,16 +651,17 @@ export class InvoicesService {
                     const clinicId = group._id;
                     const invoices = group.unpaidInvoices;
 
-                    if (invoices.length < 2) return null; // Saltar si no hay al menos dos facturas
+                    if (invoices.length < 2) return null;
 
                     const firstInvoice = invoices[0];
                     const secondInvoice = invoices[1];
                     const secondInvoiceDate = new Date(secondInvoice.createdAt);
-                    const shouldSuspend = secondInvoiceDate < overdueDate;
-
+                    
+                    // Calcular días desde la segunda factura
                     const daysOverdue = differenceInDays(new Date(), secondInvoiceDate);
-                    console.log(shouldSuspend);
-                    console.log(daysOverdue);
+                    
+                    // Suspender exactamente al día 5 desde la segunda factura
+                    const shouldSuspend = daysOverdue >= gracePeriodDays;
 
                     return {
                         clinicId,
@@ -593,13 +695,13 @@ export class InvoicesService {
                         },
                     } as ProcessedClinic;
                 })
-                .filter((clinic): clinic is ProcessedClinic => clinic !== null && clinic.shouldSuspend); // Solo clínicas que deben ser suspendidas
+                .filter((clinic): clinic is ProcessedClinic => clinic !== null && clinic.shouldSuspend);
 
             this.logger.log(`📊 Clínicas encontradas para suspensión: ${clinicsToNotifyOrSuspend.length}`);
 
             // Procesar cada clínica que debe ser suspendida
             for (const clinic of clinicsToNotifyOrSuspend) {
-                const actionMsg = `📋 Clínica: ${clinic.clinicName}, Facturas impagas: ${clinic.unpaidCount}, Días vencido: ${clinic.daysOverdue}, Admins: ${clinic.adminNames.join(', ')}`;
+                const actionMsg = `📋 Clínica: ${clinic.clinicName}, Facturas impagas: ${clinic.unpaidCount}, Días vencido: ${clinic.daysOverdue}`;
 
                 this.logger.log(`🔄 Procesando: ${actionMsg}`);
 
@@ -611,10 +713,7 @@ export class InvoicesService {
                     );
 
                     // Preparar emails para notificación
-                    const emailsToNotify = [...new Set(clinic.adminEmails)]; // Eliminar duplicados
-
-                    // console.log(emailsToNotify);
-
+                    const emailsToNotify = [...new Set(clinic.adminEmails)];
 
                     if (emailsToNotify.length > 0) {
                         // Enviar notificación de suspensión
@@ -627,7 +726,6 @@ export class InvoicesService {
 
                 } catch (err) {
                     this.logger.error(`❌ Error procesando ${clinic.clinicName}:`, err.message);
-                    // Continuar con la siguiente clínica en caso de error
                     continue;
                 }
             }

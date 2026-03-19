@@ -81,6 +81,16 @@ export class Patient {
   @Prop()
   createdDate: Date;
 
+  @Prop({ type: Types.ObjectId, ref: 'MedicalClinic', required: true })
+  medicalClinic: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branch: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
+
+
   @Prop({ required: true })
   searchName: string;
 
@@ -88,5 +98,4 @@ export class Patient {
 
 export const PatientSchema = SchemaFactory.createForClass(Patient);
 
-// Índice compuesto para búsqueda
-PatientSchema.index({ searchName: 'text', medicalClinic: 1 });
+PatientSchema.index({ medicalClinic: 1, branch: 1 });

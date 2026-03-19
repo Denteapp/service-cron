@@ -48,6 +48,9 @@ export class MedicalClinic extends Document {
   country: string;
 
   @Prop()
+  timezone?: string;
+
+  @Prop()
   nit?: string;
 
   @Prop()
@@ -64,6 +67,18 @@ export class MedicalClinic extends Document {
 
   @Prop({ required: true, default: 1 })
   licenceUser: number;
+
+  @Prop()
+  googleMapsUrl?: string;
+
+  @Prop()
+  latitude?: number;
+
+  @Prop()
+  longitude?: number;
+
+  @Prop({ type: Types.ObjectId, ref: 'Subscription' })
+  subscription?: Types.ObjectId;
 }
 
 export const MedicalClinicSchema = SchemaFactory.createForClass(MedicalClinic);

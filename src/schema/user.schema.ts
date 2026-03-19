@@ -44,13 +44,14 @@ export class User {
   @Prop()
   isActive: boolean;
 
+  // Role: 'root' = clinic owner/creator (always has email), 'admin' = administrator, 'user' = regular user, 'secreatary' = secretary
   @Prop({
     type: String,
-    enum: ['admin', 'user', 'secreatary'],
+    enum: ['admin', 'user', 'secreatary', 'root'],
     default: 'admin',
     required: true,
   })
-  role: 'admin' | 'user' | 'secreatary';
+  role: 'admin' | 'user' | 'secreatary' | 'root';
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

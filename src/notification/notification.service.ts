@@ -124,7 +124,7 @@ async sendSuspensionNotification(email: string[], data: SuspensionNotificationDa
       const emailOptions: any = {
         from: 'dente <notification-no-reply@denteapp.com>',
         to: email,
-        subject: `Suspención temporal de servicio`,
+        subject: `⚠️ Importante: Facturas pendientes - Evitá la suspensión`,
         html: emailHtml,
       };
 

@@ -47,8 +47,11 @@ export class Payment {
   @Prop()
   createdAt?: Date;
 
-  @Prop()
-  period?: string;
+  @Prop({ required: true })
+  period: string;
+
+  @Prop({ default: 'HNL' })
+  currency?: string;
   //-------------------- Campos para la factura automatica --------------------
   @Prop({ default: false })
   isAutomatic: boolean;
@@ -69,6 +72,9 @@ export class Payment {
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
+
+// Índice único para prevenir facturas duplicadas por clínica y período
+PaymentSchema.index({ medicalClinic: 1, period: 1 }, { unique: true });
 
 export enum PaymentStateClinic {
   GRATIS = 'Gratis',

@@ -32,16 +32,27 @@ type ClinicData = {
   _id: string;
   medicalClinicName: string;
   expiredSubsDate: string;
-  plan: number;
+  plan: string | number; // String desde Subscription.planName o number legacy
   country: string;
   licenceUser: number;
   adminEmails: string[];
   adminNames: string[];
 };
 
+type BillingBreakdown = {
+  planName: string;
+  basePrice: number;
+  additionalUsers: number;
+  additionalUserPrice: number;
+  additionalUsersTotal: number;
+  total: number;
+  currency: string; // USD, HNL, etc.
+};
+
 type InvoiceTemplateData = {
   invoice: InvoiceData;
   clinic: ClinicData;
+  billing?: BillingBreakdown; // Desglose de costos
   isSecondUnpaidInvoice: boolean;
   unpaidCount: number;
   paymentUrl?: string;
@@ -72,17 +83,34 @@ export function renderInvoiceEmailMJML(data: InvoiceTemplateData): string {
     });
   };
 
-  const formatAmount = (amount: number): string => {
+  const formatAmount = (amount: number, currency: string = 'HNL'): string => {
     if (amount == null) return '';
-    return amount.toLocaleString('es-HN', {
+    
+    // Mapeo de locales según moneda
+    const localeMap: Record<string, string> = {
+      'USD': 'en-US',
+      'HNL': 'es-HN',
+      'MXN': 'es-MX',
+      'GTQ': 'es-GT',
+      'CRC': 'es-CR',
+    };
+    
+    const locale = localeMap[currency.toUpperCase()] || 'es-HN';
+    
+    return amount.toLocaleString(locale, {
       style: 'currency',
-      currency: 'HNL',
+      currency: currency.toUpperCase(),
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   };
 
-  const getPlanName = (plan: number): string => {
+  const getPlanName = (plan: string | number): string => {
+    // Si ya es string (desde Subscription.planName), devolverlo directamente
+    if (typeof plan === 'string') {
+      return plan.startsWith('Plan ') ? plan : `Plan ${plan}`;
+    }
+    // Legacy: si es número (desde MedicalClinic.plan obsoleto)
     const plans: Record<number, string> = {
       1: 'Plan Inicial',
       2: 'Plan Profesional',
@@ -101,18 +129,6 @@ export function renderInvoiceEmailMJML(data: InvoiceTemplateData): string {
     supportEmail: data.supportEmail || 'soporte@denteaoo.com',
     supportPhone: data.supportPhone || '+504 3398-0220',
     websiteUrl: data.websiteUrl || 'denteapp.com',
-  };
-
-  const clinic = data.clinic || {
-    _id: '',
-    medicalClinicName: data.invoice?.holderName || 'Nombre Clínica',
-    adminNames: ['Administrador'],
-    expiredSubsDate: '',
-    plan: 1,
-    licenceUser: 0,
-    avatar: '',
-    country: '',
-    adminEmails: [],
   };
 
   const invoice = data.invoice || {
@@ -140,15 +156,38 @@ export function renderInvoiceEmailMJML(data: InvoiceTemplateData): string {
     updatedAt: '',
   };
 
+  const clinic = data.clinic || {
+    _id: '',
+    medicalClinicName: invoice.holderName || 'Nombre Clínica',
+    adminNames: ['Administrador'],
+    expiredSubsDate: '',
+    plan: 1,
+    licenceUser: 0,
+    avatar: '',
+    country: '',
+    adminEmails: [],
+  };
+
+  // Preparar desglose de facturación con valores por defecto
+  const billing = data.billing || {
+    planName: 'Inicial',
+    basePrice: 0,
+    additionalUsers: 0,
+    additionalUserPrice: 0,
+    additionalUsersTotal: 0,
+    total: invoice.amount || 0,
+    currency: 'HNL',
+  };
+
   const filledTemplate = mjmlTemplate
     // Clínica
-    .replace(/{{clinic\.medicalClinicName}}/g, clinic.medicalClinicName)
+    .replace(/{{clinic\.medicalClinicName}}/g, clinic.medicalClinicName || 'Clínica')
     .replace(/{{clinic\.adminNames\[0\]}}/g, clinic.adminNames?.[0] || 'Administrador')
     .replace(/{{clinic\.expiredSubsDate}}/g, formatDate(clinic.expiredSubsDate))
     .replace(/{{clinic\.plan}}/g, getPlanName(clinic.plan))
-    .replace(/{{clinic\.avatar}}/g, clinic.avatar)
-    .replace(/{{clinic\.licenceUser}}/g, clinic.licenceUser.toString())
-    .replace(/{{clinic\.country}}/g, clinic.country)
+    .replace(/{{clinic\.avatar}}/g, clinic.avatar || '')
+    .replace(/{{clinic\.licenceUser}}/g, (clinic.licenceUser || 1).toString())
+    .replace(/{{clinic\.country}}/g, clinic.country || 'HN')
     // Factura
     .replace(/{{invoice\.transactionID}}/g, invoice.transactionID)
     .replace(/{{invoice\.externalReference}}/g, invoice.externalReference)
@@ -156,12 +195,20 @@ export function renderInvoiceEmailMJML(data: InvoiceTemplateData): string {
     .replace(/{{invoice\.billingCycle}}/g, invoice.billingCycle)
     .replace(/{{invoice\.paymentMethod}}/g, invoice.paymentMethod)
     .replace(/{{invoice\.issuedDate}}/g, formatDate(invoice.issuedDate))
-    .replace(/{{invoice\.amount}}/g, formatAmount(invoice.amount))
+    .replace(/{{invoice\.amount}}/g, formatAmount(invoice.amount, billing.currency))
     .replace(/{{invoice\.displayStatus}}/g, invoice.displayStatus)
     .replace(/{{invoice\.description}}/g, invoice.description)
     .replace(/{{invoice\.holderName}}/g, invoice.holderName)
     .replace(/{{invoice\.generatedBy}}/g, invoice.generatedBy)
     .replace(/{{invoice\.transferDate}}/g, formatDate(invoice.transferDate))
+    // Desglose de facturación
+    .replace(/{{billing\.planName}}/g, billing.planName)
+    .replace(/{{billing\.basePrice}}/g, formatAmount(billing.basePrice, billing.currency))
+    .replace(/{{billing\.additionalUsers}}/g, billing.additionalUsers.toString())
+    .replace(/{{billing\.additionalUserPrice}}/g, formatAmount(billing.additionalUserPrice, billing.currency))
+    .replace(/{{billing\.additionalUsersTotal}}/g, formatAmount(billing.additionalUsersTotal, billing.currency))
+    .replace(/{{billing\.total}}/g, formatAmount(billing.total, billing.currency))
+    .replace(/{{billing\.currency}}/g, billing.currency)
     // URLs y otros
     .replace(/{{paymentUrl}}/g, defaultUrls.paymentUrl)
     .replace(/{{viewInvoiceUrl}}/g, defaultUrls.viewInvoiceUrl)

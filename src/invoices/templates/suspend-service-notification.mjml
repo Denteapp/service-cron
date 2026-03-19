@@ -111,12 +111,12 @@
     <mj-section background-color="#ffffff" padding="32px 25px">
       <mj-column>
         <mj-text align="center" font-size="28px" font-weight="600" color="#1a202c">
-          Servicio temporalmente suspendido  😞
+          ⚠️ Atención: Facturas pendientes de pago
         </mj-text>
         <mj-text align="center" font-size="16px" color="#6b7280">
-          Hola <strong>{{adminName}}</strong>, con pesar te notificamos que hemos tenido que suspender temporalmente el acceso al servicio de <strong>{{clinicName}}</strong> debido a facturas pendientes de pago. Entendemos que esta situación puede ser inconveniente y estamos aquí para ayudarte a resolverla rápidamente.
+          Hola <strong>{{adminName}}</strong>, te escribimos para informarte que tu clínica <strong>{{clinicName}}</strong> tiene facturas pendientes de pago. Para continuar disfrutando del servicio sin interrupciones, es necesario regularizar tu situación lo antes posible.
         </mj-text>
-      </mj-column>
+      </mj:column>
     </mj-section>
 
     <!-- Suspension Alert -->
@@ -126,7 +126,7 @@
           <tr>
             <td style="text-align: center;">
               <div style="font-size: 15px; color: #7f1d1d;">
-                Tu clínica tiene <strong style="color: #dc2626;">{{unpaidCount}} factura(s) pendiente(s)</strong> con 1 pago vencido desde hace <strong style="color: #dc2626;">{{daysOverdue}} días</strong>.
+                Tu clínica tiene <strong style="color: #dc2626;">{{unpaidCount}} factura(s) pendiente(s)</strong>. En cualquier momento podrías perder el acceso a la plataforma si no regularizás tu situación de pago.
               </div>
             </td>
           </tr>
@@ -235,14 +235,13 @@
           <tr>
             <td>
               <div style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 12px;">
-                📋 Información importante sobre la suspensión:
+                📋 Información importante sobre tu cuenta:
               </div>
               <ul style="font-size: 14px; color: #6b7280; margin: 0; padding-left: 16px;">
-                <li>Para reactivar tu servicio, necesitás ponerte al día con las facturas, ya que el pago se realiza antes del uso del servicio.</li>
-                <li style="margin-bottom: 8px;">No podrás acceder a la plataforma dente mientras el servicio esté suspendido</li>
-                <li style="margin-bottom: 8px;">Tus datos permanecen seguros, pero de momento no podrás consultarlos temporalmente</li>
-                <li style="margin-bottom: 8px;">Las citas programadas podrían verse afectadas</li>
-                <li style="margin-bottom: 8px;">Una vez realizado el pago, tu servicio se reactivará automáticamente en 4-8 horas</li>
+                <li style="margin-bottom: 8px;"><strong>Acceso al servicio:</strong> En cualquier momento podrías perder el acceso a la plataforma si no regularizás tu situación de pago</li>
+                <li style="margin-bottom: 8px;"><strong>Tus datos están seguros:</strong> Toda tu información permanece protegida, simplemente podrías perder el acceso temporalmente</li>
+                <li style="margin-bottom: 8px;"><strong>Servicio prepago:</strong> dente funciona con pago anticipado, por lo que necesitás estar al día para continuar usando el servicio</li>
+                <li style="margin-bottom: 8px;"><strong>Reactivación:</strong> Una vez realizado el pago y validado, tu servicio se reactivará automáticamente</li>
               </ul>
             </td>
           </tr>
@@ -254,7 +253,7 @@
     <mj-section background-color="#ffffff" padding="0 25px 24px 25px">
       <mj-column>
         <mj-text font-size="22px" font-weight="600" color="#111827">
-          Reactivar tu servicio
+          Regularizá tu situación
         </mj-text>
         <mj-table css-class="portal-card">
           <tr>
@@ -263,12 +262,13 @@
                 <img src="https://portal.denteapp.com/email/login.png" alt="Portal de Pago Seguro dente" style="width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 16px;" />
               </a>
               <div style="font-size: 16px; font-weight: 500; color: #374151; margin-bottom: 16px;">
-                Accede al portal de pagos para:
+                Ingresá al portal de pagos para:
               </div>
               <ul style="font-size: 14px; color: #6b7280; text-align: left; max-width: 300px; margin: 0 auto 16px auto; padding-left: 20px;">
-                <li style="margin-bottom: 8px;">Ver todas las facturas pendientes</li>
-                <li style="margin-bottom: 8px;">Realizar el pago inmediato por tarjeta o transferencia</li>
-                <li>Descargar comprobantes de pago</li>
+                <li style="margin-bottom: 8px;">Ver todas tus facturas pendientes</li>
+                <li style="margin-bottom: 8px;">Realizar el pago inmediato (transferencia bancaria)</li>
+                <li style="margin-bottom: 8px;">Subir tu comprobante de pago</li>
+                <li>Mantener tu servicio activo sin interrupciones</li>
               </ul>
           <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
   <tr>
@@ -276,7 +276,7 @@
       <table border="0" cellpadding="0" cellspacing="0" role="presentation">
         <tr>
           <td align="center" bgcolor="#374151" style="border-radius: 8px;">
-            <a href="{{paymentUrl}}" style="color: #ffffff; padding: 12px 24px; display: inline-block; text-decoration: none; font-weight: bold;">PAGAR AHORA Y REACTIVAR</a>
+            <a href="{{paymentUrl}}" style="color: #ffffff; padding: 12px 24px; display: inline-block; text-decoration: none; font-weight: bold;">PAGAR AHORA</a>
           </td>
         </tr>
       </table>
